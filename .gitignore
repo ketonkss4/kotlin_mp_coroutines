@@ -1,0 +1,31 @@
+# Mac files
+.DS_Store
+
+# built application files
+*.apk
+*.ap_
+
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+
+# generated files
+build/
+bin/
+gen/
+obj/
+**/libs/x86/
+**/libs/armeabi-v7a/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Android Studio
+workspace.xml
+tasks.xml
+.gradle/
+.idea/
+*.iml
+gradle/wrapper/gradle-wrapper.properties

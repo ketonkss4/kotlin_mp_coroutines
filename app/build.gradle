@@ -1,0 +1,69 @@
+apply plugin: 'com.android.application'
+
+apply plugin: 'kotlin-android'
+
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion 27
+    defaultConfig {
+        applicationId "co.happybits.mpcompanion"
+        minSdkVersion 18
+        targetSdkVersion 27
+        versionCode 1
+        versionName "1.0"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    dexOptions {
+        javaMaxHeapSize "5g"
+    }
+
+    splits {
+        abi {
+            enable true // enable ABI split feature to create one APK per ABI
+            reset()
+            include 'armeabi-v7a'
+        }
+    }
+
+    // map for the version code
+    project.ext.versionCodes = ['armeabi-v7a': 2]
+
+    android.applicationVariants.all { variant ->
+        // assign different version code for each output
+        variant.outputs.each { output ->
+            output.versionCodeOverride =
+                    project.ext.versionCodes.get(output.getFilter(com.android.build.OutputFile.ABI), 0) * 1000000 + android.defaultConfig.versionCode
+        }
+
+        def hbmxNdkTask = "${variant.name}HbmxNdkBuild"
+        task(hbmxNdkTask, type: Exec) {
+            workingDir "src/main"
+            args "-j8", "NDK_OUT=${project(':hbmx').projectDir}/obj"
+            if (variant.buildType.debuggable) {
+                args "NDK_DEBUG=1", "GYP_CONFIGURATION=Debug"
+            }
+            executable "$ndkDir/ndk-build"
+        }
+        variant.javaCompiler.dependsOn hbmxNdkTask
+    }
+
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation"org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
+    implementation 'com.android.support:appcompat-v7:27.1.1'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+}

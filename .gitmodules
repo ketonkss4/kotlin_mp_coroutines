@@ -1,0 +1,3 @@
+[submodule "hbmx"]
+	path = hbmx
+	url = git@github.com:happybits/hbmx
