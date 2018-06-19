@@ -34,17 +34,6 @@ android {
             output.versionCodeOverride =
                     project.ext.versionCodes.get(output.getFilter(com.android.build.OutputFile.ABI), 0) * 1000000 + android.defaultConfig.versionCode
         }
-
-        def hbmxNdkTask = "${variant.name}HbmxNdkBuild"
-        task(hbmxNdkTask, type: Exec) {
-            workingDir "src/main"
-            args "-j8", "NDK_OUT=${project(':hbmx').projectDir}/obj"
-            if (variant.buildType.debuggable) {
-                args "NDK_DEBUG=1", "GYP_CONFIGURATION=Debug"
-            }
-            executable "$ndkDir/ndk-build"
-        }
-        variant.javaCompiler.dependsOn hbmxNdkTask
     }
 
     sourceSets {
