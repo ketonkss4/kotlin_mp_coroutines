@@ -1,7 +1,9 @@
 # Marco Polo Sample Companion App
 ## To setup the project
-1. git submodule update --init
-2. cd hbmx; scripts/setup.sh
+1. brew install git-lfs
+2. git lfs install
+3. git submodule update --init
+4. ./gradlew assembleDebug
 
 
 This app is expected to be used as a companion to the normal Marco Polo app. You should install the full MP app
