@@ -60,6 +60,12 @@ public class MpCompanion extends Application {
             public void onHardResetData() {}
         });
 
+        ApplicationIntf.getDataLayer().setTables(new StubHbmxDatabase.ConversationTable(), new StubHbmxDatabase.UserTable(),
+            new StubHbmxDatabase.ConversationUserTable(), new StubHbmxDatabase.MessageTable(),
+            new StubHbmxDatabase.VideoTable(), new StubHbmxDatabase.ImageUploadTable(),
+            new StubHbmxDatabase.BackoffTimingTable(), new StubHbmxDatabase.SupportRequestTable(),
+            new StubHbmxDatabase.RetryableApiCallTable(), new StubHbmxDatabase.VideoUploadTable());
+
         ApplicationIntf.initSingletonsPostDB();
         ApplicationIntf.initFinishedForAppOpen();
     }
