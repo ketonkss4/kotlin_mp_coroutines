@@ -8,6 +8,8 @@ import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
+
 import co.happybits.hbmx.BaseIntf;
 import co.happybits.hbmx.BuildFlavor;
 import co.happybits.hbmx.Hbmx;
@@ -58,6 +60,10 @@ public class MpCompanion extends Application {
 
             @Override
             public void onHardResetData() {}
+
+            @Override
+            public void onRetryableApiCallFailed(@Nonnull String path, @Nonnull String reason) {
+            }
         });
 
         ApplicationIntf.getDataLayer().setTables(new StubHbmxDatabase.ConversationTable(), new StubHbmxDatabase.UserTable(),

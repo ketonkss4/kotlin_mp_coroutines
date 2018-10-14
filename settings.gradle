@@ -1,2 +1,3 @@
-include ':app', ':hbmx'
-project(':hbmx').projectDir = new File(settingsDir, 'hbmx/android')
+include ':app'
+//include ':app', ':hbmx'
+//project(':hbmx').projectDir = new File(settingsDir, 'hbmx/android')
