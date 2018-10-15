@@ -84,9 +84,9 @@ public class LoginManager {
                 .put("secret", _secret)
                 .put("app_type", "mp")
                 .put("app_version", "1.0.0")
-                .put("app_build", 1000)
+                .put("app_build", "1000")
                 .put("platform_type", "android")
-                .put("platform_version", 24)
+                .put("platform_version", "24")
                 .put("manufacturer", Build.MANUFACTURER)
                 .put("model_name", Build.MODEL)
                 .put("flavor", "dev")
@@ -94,7 +94,9 @@ public class LoginManager {
                 .put("timezone", "PST");
 
             PlatformHttpConnection connection = new PlatformHttpConnection(API_BASE_URL + "/auth");
-            Response response = connection.executeRequest(PlatformHttpConnection.POST, new HashMap<>(), authParams);
+            HashMap<String, String> headers = new HashMap<>();
+            headers.put("Content-Type", "application/json");
+            Response response = connection.executeRequest(PlatformHttpConnection.POST, headers, authParams);
             JSONObject responseJSON = new JSONObject(new String(response.body().bytes()));
 
             parseAuthResponse(responseJSON);
@@ -158,6 +160,7 @@ public class LoginManager {
         try {
             PlatformHttpConnection connection = new PlatformHttpConnection(API_BASE_URL + path);
             HashMap<String, String> headers = new HashMap<>();
+            headers.put("Content-Type", "application/json");
             headers.put("Authorization", "Bearer " + _apiToken);
 
             Response response = connection.executeRequest(method, headers, params);
