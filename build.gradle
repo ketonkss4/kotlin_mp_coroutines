@@ -28,9 +28,6 @@ allprojects {
         }
     }
 
-//    Properties properties = new Properties()
-//    properties.load(project.rootProject.file('local.properties').newDataInputStream())
-//    project.ext.ndkDir = properties.getProperty('ndk.dir')
 
     ext {
         kotlin_version = '1.2.60'

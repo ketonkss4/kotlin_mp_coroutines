@@ -21,24 +21,7 @@ android {
         javaMaxHeapSize "5g"
     }
 
-    splits {
-        abi {
-            enable true // enable ABI split feature to create one APK per ABI
-            reset()
-            include 'armeabi-v7a'
-        }
-    }
 
-    // map for the version code
-    project.ext.versionCodes = ['armeabi-v7a': 2]
-
-    android.applicationVariants.all { variant ->
-        // assign different version code for each output
-        variant.outputs.each { output ->
-            output.versionCodeOverride =
-                    project.ext.versionCodes.get(output.getFilter(com.android.build.OutputFile.ABI), 0) * 1000000 + android.defaultConfig.versionCode
-        }
-    }
 
     sourceSets {
         main {
@@ -46,8 +29,6 @@ android {
             java.srcDirs = ['src/main/java']
             res.srcDirs = ['src/main/res']
             assets.srcDirs = ['src/main/assets']
-            jniLibs.srcDirs = ['src/main/libs']
-            jni.srcDirs = []
         }
     }
 
@@ -72,7 +53,6 @@ kotlin {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
     //kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
@@ -88,8 +68,6 @@ dependencies {
     // Dagger Android
     annotationProcessor "com.google.dagger:dagger-android-processor:$dagger_version"
     implementation "com.google.dagger:dagger-android-support:$dagger_version"
-    // if you are not using support library, include this instead
-    implementation "com.google.dagger:dagger-android:$dagger_version"
 
     //butterknife
     implementation "com.jakewharton:butterknife:$butterKnife_version"
@@ -106,5 +84,4 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:2.23.0'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-//    api project(path: ':hbmx')
 }
