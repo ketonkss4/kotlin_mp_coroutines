@@ -1,8 +1,10 @@
 package co.happybits.mpcompanion.networking;
 
 import java.util.concurrent.TimeUnit;
+
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 
 public class PlatformHttpSession {
 
@@ -21,11 +23,14 @@ public class PlatformHttpSession {
 
     public PlatformHttpSession() {
         ConnectionPool pool = new ConnectionPool(IDLE_CONNECTION_COUNT, IDLE_CONNECTION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
 
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
-            .connectionPool(pool)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS);
+                .connectionPool(pool)
+                .addInterceptor(loggingInterceptor)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS);
 
         // Add a 10 second ping interval to help alleviate SocketTimeoutException
         // https://github.com/square/okhttp/issues/3146

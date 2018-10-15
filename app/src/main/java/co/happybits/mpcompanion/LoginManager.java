@@ -16,9 +16,9 @@ import java.util.UUID;
 import co.happybits.mpcompanion.networking.PlatformHttpConnection;
 import okhttp3.Response;
 
-public class LoginManager {
+import static co.happybits.mpcompanion.networking.ApiConfigKt.API_BASE_URL;
 
-    private static String API_BASE_URL = "https://dev.marcopolo.me/api/v4";
+public class LoginManager {
 
     private static LoginManager _instance;
 
