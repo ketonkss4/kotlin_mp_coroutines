@@ -34,14 +34,20 @@ class WidgetConfigureActivity : AppCompatActivity() {
 
     companion object {
 
-        internal val PREFS_NAME = "co.happybits.mpcompanion.widget.NewAppWidget"
-        private val PREF_PREFIX_KEY = "appwidget_"
-        val CONVO_INTENT_KEY = "CONVO_INTENT_KEY"
+        private const val PREFS_NAME = "co.happybits.mpcompanion.widget.NewAppWidget"
+        private const val PREF_PREFIX_KEY = "appwidget_"
+        const val CONVO_INTENT_KEY = "CONVO_INTENT_KEY"
+        const val WIDGET_ID_KEY = "WIDGET_ID_KEY"
         // Write the prefix to the SharedPreferences object for this widget
         internal fun saveConvoIdPref(context: Context, appWidgetId: Int, conversationId: String) {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
             prefs.putString(PREF_PREFIX_KEY + appWidgetId, conversationId)
             prefs.apply()
+        }
+
+        fun getConvoIdPref(context: Context, appWidgetId: Int) : String? {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            return prefs.getString(PREF_PREFIX_KEY + appWidgetId, null)
         }
     }
 
@@ -72,6 +78,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
 
             val intent = Intent(this, WidgetService::class.java)
             intent.putExtra(CONVO_INTENT_KEY, widgetViewModel.getUnwatchedCount(conversation))
+            intent.putExtra(WIDGET_ID_KEY, appWidgetId)
             startService(intent)
 
             val appWidgetManager = AppWidgetManager.getInstance(this)

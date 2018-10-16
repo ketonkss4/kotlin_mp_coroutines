@@ -9,6 +9,7 @@ import android.widget.RemoteViews
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
 import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.CONVO_INTENT_KEY
+import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.WIDGET_ID_KEY
 import co.happybits.mpcompanion.widget.dependencies.DaggerWidgetComponent
 import kotlinx.coroutines.experimental.Dispatchers
 import kotlinx.coroutines.experimental.GlobalScope
@@ -45,9 +46,13 @@ class WidgetViewController : AppWidgetProvider() {
         // There may be multiple widgets active, so update all of them
         for (appWidgetId in appWidgetIds) {
             GlobalScope.launch(Dispatchers.Main) {
-                val poloWidget = widgetViewModel.syncWidgetData()
-                widgetText = poloWidget.unwatchedCount
-                updateAppWidget(context, appWidgetManager, appWidgetId)
+                val convoId = WidgetConfigureActivity.getConvoIdPref(context, appWidgetId)
+                convoId?.let {
+                    val poloWidget = widgetViewModel.syncWidgetData(it)
+                    widgetText = poloWidget.unwatchedCount
+                    updateAppWidget(context, appWidgetManager, appWidgetId)
+                }
+
             }
         }
     }
@@ -57,8 +62,9 @@ class WidgetViewController : AppWidgetProvider() {
         val appWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, WidgetViewController::class.java))
         if (intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE && intent.hasExtra(CONVO_INTENT_KEY)) {
             widgetText = intent.getStringExtra(CONVO_INTENT_KEY)
+            val targetWidget = intent.getIntExtra(WIDGET_ID_KEY, AppWidgetManager.INVALID_APPWIDGET_ID)
             for (id in appWidgetIds) {
-                updateAppWidget(context, appWidgetManager, id)
+                if (targetWidget == id) updateAppWidget(context, appWidgetManager, id)
             }
         }
     }

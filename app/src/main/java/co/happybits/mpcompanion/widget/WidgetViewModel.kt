@@ -14,18 +14,14 @@ class WidgetViewModel(private val poloService: ServiceClientHelper.PoloService,
                       val poloWidgetData: MutableLiveData<List<Conversation>>
 ) : ViewModel() {
 
-    companion object {
-        val TARGET_ID: String = "100"
-    }
-
-    private suspend fun requestTargetConversationData(): Conversation {
+    private suspend fun requestTargetConversationData(targetConversation: String): Conversation {
         //TODO replace test targetID with one from network
         val response = poloService.requestConversationSync().await()
-        return response.conversations.first { it.conversation_id == TARGET_ID }
+        return response.conversations.first { it.conversation_id == targetConversation }
     }
 
-    suspend fun syncWidgetData(): PoloWidget {
-        val conversationData = requestTargetConversationData()
+    suspend fun syncWidgetData(targetConversation : String): PoloWidget {
+        val conversationData = requestTargetConversationData(targetConversation)
         return PoloWidget(conversationId = conversationData.conversation_id,
                 name = conversationData.title,
                 unwatchedCount = getUnwatchedCount(conversationData)
