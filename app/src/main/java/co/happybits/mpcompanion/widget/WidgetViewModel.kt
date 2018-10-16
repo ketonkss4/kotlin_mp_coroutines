@@ -26,25 +26,28 @@ class WidgetViewModel(private val poloService: ServiceClientHelper.PoloService,
 
     suspend fun syncWidgetData(): PoloWidget {
         val conversationData = requestTargetConversationData()
-        val poloWidget = PoloWidget(conversationId = conversationData.conversation_id,
+        return PoloWidget(conversationId = conversationData.conversation_id,
                 name = conversationData.title,
-                unwatchedCount = conversationData
-                        .messages
-                        .entries
-                        .asSequence()
-                        .filter {
-                            val myUserId = conversationData.members.getMyUserId()
-                            !it.viewers.viewerIds.contains(myUserId)
-                        }
-                        .count()
+                unwatchedCount = getUnwatchedCount(conversationData)
         )
-        return poloWidget
     }
 
     fun requestConversationsListData() {
         GlobalScope.launch(dispatchers.ioDispatcher()) {
             val response = poloService.requestConversationSync().await()
             poloWidgetData.postValue(response.conversations)
+        }
+    }
+
+    internal fun getUnwatchedCount(conversation: Conversation): String {
+        val myUserId = conversation.members.getMyUserId()
+        val filteredCollection = conversation.messages.entries
+        return if (filteredCollection.count { it.viewers == null } > 0) {
+            filteredCollection.count { it.viewers == null }.toString()
+        } else {
+            filteredCollection
+                    .count { entries -> !entries.viewers!!.viewerIds.contains(myUserId) }
+                    .toString()
         }
     }
 

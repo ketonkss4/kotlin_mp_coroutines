@@ -4,7 +4,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.RecyclerView
 import butterknife.BindView
@@ -12,7 +11,7 @@ import butterknife.ButterKnife
 import co.happybits.mpcompanion.R
 import co.happybits.mpcompanion.data.Conversation
 
-class ConfigListAdapter : RecyclerView.Adapter<ConfigListAdapter.ViewHolder>() {
+class ConversationsListAdapter : RecyclerView.Adapter<ConversationsListAdapter.ViewHolder>() {
     private val convoList: ArrayList<Conversation> = ArrayList()
     val selectData: MutableLiveData<Conversation> = MutableLiveData()
 

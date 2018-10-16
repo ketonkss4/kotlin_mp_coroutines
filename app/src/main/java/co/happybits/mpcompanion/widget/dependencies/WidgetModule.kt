@@ -8,9 +8,9 @@ import dagger.Module
 import dagger.Provides
 
 @Module
-class WidgetModule {
+open class WidgetModule {
     @Provides
-    fun provideWidgetViewModel(
+    open fun provideWidgetViewModel(
             poloService: ServiceClientHelper.PoloService,
             dispatchers: KtDispatchers
     ): WidgetViewModel {

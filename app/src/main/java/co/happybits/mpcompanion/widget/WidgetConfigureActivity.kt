@@ -15,7 +15,6 @@ import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
 import co.happybits.mpcompanion.authentication.AuthViewModel
 import co.happybits.mpcompanion.data.Conversation
-import co.happybits.mpcompanion.data.getMyUserId
 import co.happybits.mpcompanion.widget.dependencies.DaggerWidgetComponent
 import javax.inject.Inject
 
@@ -31,7 +30,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
     lateinit var widgetViewModel: WidgetViewModel
     @Inject
     lateinit var authViewModel: AuthViewModel
-    lateinit var adapter: ConfigListAdapter
+    lateinit var adapter: ConversationsListAdapter
 
     companion object {
 
@@ -58,7 +57,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
         injectDaggerDependencies()
         ButterKnife.bind(this)
         ButterKnife.setDebug(true)
-        adapter = ConfigListAdapter()
+        adapter = ConversationsListAdapter()
         conversationsListView.layoutManager = LinearLayoutManager(this)
         conversationsListView.adapter = adapter
         widgetViewModel.poloWidgetData.observe(this, Observer { adapter.refreshList(it) })
@@ -72,14 +71,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
             saveConvoIdPref(this, appWidgetId, conversation.conversation_id)
 
             val intent = Intent(this, WidgetService::class.java)
-            intent.putExtra(CONVO_INTENT_KEY, conversation.messages
-                    .entries
-                    .asSequence()
-                    .filter {entries ->
-                        val myUserId = conversation.members.getMyUserId()
-                        !entries.viewers.viewerIds.contains(myUserId)
-                    }
-                    .count().toString())
+            intent.putExtra(CONVO_INTENT_KEY, widgetViewModel.getUnwatchedCount(conversation))
             startService(intent)
 
             val appWidgetManager = AppWidgetManager.getInstance(this)
@@ -87,6 +79,8 @@ class WidgetConfigureActivity : AppCompatActivity() {
             completeConfiguration()
         }
     }
+
+
 
     private fun completeConfiguration() {
         val resultValue = Intent()

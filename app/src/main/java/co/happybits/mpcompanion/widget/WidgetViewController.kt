@@ -46,7 +46,7 @@ class WidgetViewController : AppWidgetProvider() {
         for (appWidgetId in appWidgetIds) {
             GlobalScope.launch(Dispatchers.Main) {
                 val poloWidget = widgetViewModel.syncWidgetData()
-                widgetText = poloWidget.unwatchedCount.toString()
+                widgetText = poloWidget.unwatchedCount
                 updateAppWidget(context, appWidgetManager, appWidgetId)
             }
         }
