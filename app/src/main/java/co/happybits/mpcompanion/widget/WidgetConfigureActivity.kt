@@ -27,8 +27,7 @@ class WidgetConfigureActivity : AppCompatActivity(), WidgetController {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     @BindView(R.id.conversations_list_view)
     lateinit var conversationsListView: RecyclerView
-    @Inject
-    lateinit var widgetViewModel: WidgetViewModel
+    @Inject lateinit var widgetViewModel: WidgetViewModel
     lateinit var adapter: ConfigListAdapter
 
     companion object {

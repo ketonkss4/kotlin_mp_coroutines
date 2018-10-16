@@ -1,4 +1,4 @@
-package co.happybits.mpcompanion;
+package co.happybits.mpcompanion.authentication.dependencies;
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.UUID;
 
+import co.happybits.mpcompanion.MpCompanion;
 import co.happybits.mpcompanion.networking.PlatformHttpConnection;
 import okhttp3.Response;
 
@@ -45,7 +46,7 @@ public class LoginManager {
         _isRegistered = prefs.getBoolean("IsRegistered", false);
     }
 
-    boolean login(final String phone, final String countryCode) {
+    public boolean login(final String phone, final String countryCode) {
 
         // phone: the local phone number including area code (e.g. 2065551234)
         // countryCode: the two letter country identifier (e.g. "US")

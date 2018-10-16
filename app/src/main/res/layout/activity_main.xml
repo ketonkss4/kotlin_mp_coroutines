@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="co.happybits.mpcompanion.MainActivity">
+    tools:context="co.happybits.mpcompanion.authentication.AuthActivity">
 
     <TextView
         android:layout_width="wrap_content"
