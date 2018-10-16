@@ -14,10 +14,10 @@ import retrofit2.http.Path
 class ServiceClientHelper {
 
     interface PoloService {
-        @GET("/conversations/sync")
+        @GET("conversations/sync")
         fun requestConversationSync(): Deferred<List<Conversation>>
 
-        @PUT(" /conversations/{conversation_id}/messages/{message_id}")
+        @PUT("conversations/{conversation_id}/messages/{message_id}")
         fun sendMessage(@Path("conversation_id") conversationId: String, @Path("message_id") messageId: String)
     }
 
