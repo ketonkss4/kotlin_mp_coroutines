@@ -4,7 +4,7 @@ import co.happybits.mpcompanion.authentication.AuthViewModel
 import co.happybits.mpcompanion.authentication.dependencies.AuthModule
 import co.happybits.mpcompanion.injection.AppComponent
 import co.happybits.mpcompanion.widget.WidgetConfigureActivity
-import co.happybits.mpcompanion.widget.WidgetViewController
+import co.happybits.mpcompanion.widget.WidgetViewProvider
 import co.happybits.mpcompanion.widget.WidgetViewModel
 import dagger.Component
 
@@ -13,6 +13,6 @@ import dagger.Component
 interface WidgetComponent {
     val widgetViewModel: WidgetViewModel
     val authViewModel: AuthViewModel
-    fun inject(widgetViewController: WidgetViewController)
+    fun inject(widgetViewProvider: WidgetViewProvider)
     fun inject(widgetConfigureActivity: WidgetConfigureActivity)
 }

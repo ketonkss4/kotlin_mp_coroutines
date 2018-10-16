@@ -1,26 +1,30 @@
 package co.happybits.mpcompanion.widget
 
+import android.appwidget.AppWidgetManager
+import android.widget.RemoteViews
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import co.happybits.mpcompanion.R
 import co.happybits.mpcompanion.concurrency.KtDispatchers
 import co.happybits.mpcompanion.data.Conversation
 import co.happybits.mpcompanion.data.getMyUserId
 import co.happybits.mpcompanion.networking.ServiceClientHelper
+import co.happybits.mpcompanion.widget.persistence.WidgetPreferencesManager
 import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.launch
 
 class WidgetViewModel(private val poloService: ServiceClientHelper.PoloService,
                       private val dispatchers: KtDispatchers,
-                      val poloWidgetData: MutableLiveData<List<Conversation>>
+                      val poloWidgetData: MutableLiveData<List<Conversation>>,
+                      private val widgetPreferencesManager: WidgetPreferencesManager
 ) : ViewModel() {
 
     private suspend fun requestTargetConversationData(targetConversation: String): Conversation {
-        //TODO replace test targetID with one from network
         val response = poloService.requestConversationSync().await()
         return response.conversations.first { it.conversation_id == targetConversation }
     }
 
-    suspend fun syncWidgetData(targetConversation : String): PoloWidget {
+    suspend fun syncWidgetData(targetConversation: String): PoloWidget {
         val conversationData = requestTargetConversationData(targetConversation)
         return PoloWidget(conversationId = conversationData.conversation_id,
                 name = conversationData.title,
@@ -33,6 +37,42 @@ class WidgetViewModel(private val poloService: ServiceClientHelper.PoloService,
             val response = poloService.requestConversationSync().await()
             poloWidgetData.postValue(response.conversations)
         }
+    }
+
+    fun updateWidgetData(
+            appWidgetManager: AppWidgetManager,
+            appWidgetIds: IntArray,
+            remoteViews: RemoteViews
+    ) {
+        for (appWidgetId in appWidgetIds) {
+            GlobalScope.launch(dispatchers.uiDispatcher()) {
+                val convoId = widgetPreferencesManager.getConvoIdPref(appWidgetId)
+                convoId?.let {
+                    val poloWidget = syncWidgetData(it)
+                    updateWidgetView(
+                            appWidgetManager,
+                            appWidgetId,
+                            remoteViews,
+                            poloWidget.unwatchedCount
+                    )
+                }
+
+            }
+        }
+    }
+
+    fun updateWidgetView(
+            appWidgetManager: AppWidgetManager,
+            appWidgetId: Int,
+            views: RemoteViews,
+            widgetText: String = "0"
+    ) {
+        views.setTextViewText(R.id.appwidget_text, widgetText)
+        appWidgetManager.updateAppWidget(appWidgetId, views)
+    }
+
+    fun saveConversationId(appWidgetId: Int, convoId: String){
+        widgetPreferencesManager.saveConvoIdPref(appWidgetId, convoId)
     }
 
     internal fun getUnwatchedCount(conversation: Conversation): String {

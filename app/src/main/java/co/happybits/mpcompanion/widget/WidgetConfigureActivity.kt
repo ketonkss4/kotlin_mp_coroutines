@@ -2,9 +2,9 @@ package co.happybits.mpcompanion.widget
 
 import android.app.Activity
 import android.appwidget.AppWidgetManager
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.widget.RemoteViews
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,7 +19,7 @@ import co.happybits.mpcompanion.widget.dependencies.DaggerWidgetComponent
 import javax.inject.Inject
 
 /**
- * The configuration screen for the [WidgetViewController] AppWidget.
+ * The configuration screen for the [WidgetViewProvider] AppWidget.
  */
 class WidgetConfigureActivity : AppCompatActivity() {
 
@@ -30,25 +30,11 @@ class WidgetConfigureActivity : AppCompatActivity() {
     lateinit var widgetViewModel: WidgetViewModel
     @Inject
     lateinit var authViewModel: AuthViewModel
-    lateinit var adapter: ConversationsListAdapter
+    private lateinit var adapter: ConversationsListAdapter
 
     companion object {
-
-        private const val PREFS_NAME = "co.happybits.mpcompanion.widget.NewAppWidget"
-        private const val PREF_PREFIX_KEY = "appwidget_"
         const val CONVO_INTENT_KEY = "CONVO_INTENT_KEY"
         const val WIDGET_ID_KEY = "WIDGET_ID_KEY"
-        // Write the prefix to the SharedPreferences object for this widget
-        internal fun saveConvoIdPref(context: Context, appWidgetId: Int, conversationId: String) {
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-            prefs.putString(PREF_PREFIX_KEY + appWidgetId, conversationId)
-            prefs.apply()
-        }
-
-        fun getConvoIdPref(context: Context, appWidgetId: Int) : String? {
-            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            return prefs.getString(PREF_PREFIX_KEY + appWidgetId, null)
-        }
     }
 
     public override fun onCreate(icicle: Bundle?) {
@@ -74,15 +60,18 @@ class WidgetConfigureActivity : AppCompatActivity() {
 
     private fun onConvoSelected(): Observer<Conversation> {
         return Observer { conversation ->
-            saveConvoIdPref(this, appWidgetId, conversation.conversation_id)
+            //save convo id to update widget periodically later
+            widgetViewModel.saveConversationId( appWidgetId, conversation.conversation_id)
 
+            //start widget update service
             val intent = Intent(this, WidgetService::class.java)
             intent.putExtra(CONVO_INTENT_KEY, widgetViewModel.getUnwatchedCount(conversation))
             intent.putExtra(WIDGET_ID_KEY, appWidgetId)
             startService(intent)
 
+            //update widget views and complete config
             val appWidgetManager = AppWidgetManager.getInstance(this)
-            WidgetViewController.updateAppWidget(this, appWidgetManager, appWidgetId)
+            widgetViewModel.updateWidgetView(appWidgetManager, appWidgetId, RemoteViews(packageName, R.layout.widget_view_controller))
             completeConfiguration()
         }
     }
