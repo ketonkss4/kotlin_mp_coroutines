@@ -52,6 +52,14 @@ class WidgetViewProvider : AppWidgetProvider() {
         }
     }
 
+    override fun onDisabled(context: Context) {
+        super.onDisabled(context)
+        if (MpCompanion.instance.isMyServiceRunning(WidgetService::class.java)) {
+            val intent = Intent(context, WidgetService::class.java)
+            MpCompanion.instance.stopService(intent)
+        }
+    }
+
     private fun injectDaggerDependencies() {
         DaggerWidgetComponent.builder()
                 .appComponent(MpCompanion.appComponent)

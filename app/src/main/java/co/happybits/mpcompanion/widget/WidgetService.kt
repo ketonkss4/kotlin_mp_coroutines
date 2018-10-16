@@ -5,7 +5,6 @@ import android.appwidget.AppWidgetManager
 import android.content.Intent
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.authentication.dependencies.LoginManager
-import co.happybits.mpcompanion.injection.DaggerAppComponent
 import co.happybits.mpcompanion.networking.ServiceClientHelper
 import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.UNWATCHED_COUNT_KEY
 import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.UPDATE_WIDGET_ACTION
