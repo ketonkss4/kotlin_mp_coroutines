@@ -7,9 +7,13 @@ import co.happybits.mpcompanion.widget.WidgetViewModel
 import dagger.Module
 import dagger.Provides
 
-@Module class WidgetModule {
-    @Provides fun provideWidgetViewModel(poloService: ServiceClientHelper.PoloService
-    , dispatchers: KtDispatchers): WidgetViewModel {
+@Module
+class WidgetModule {
+    @Provides
+    fun provideWidgetViewModel(
+            poloService: ServiceClientHelper.PoloService,
+            dispatchers: KtDispatchers
+    ): WidgetViewModel {
         return WidgetViewModel(
                 poloService,
                 dispatchers,

@@ -45,11 +45,10 @@ class ConfigListAdapter : RecyclerView.Adapter<ConfigListAdapter.ViewHolder>() {
 
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        @BindView(R.id.title)
-        private lateinit var convoTitle: TextView
+        @BindView(R.id.convo_title) lateinit var convoTitle: TextView
 
         fun bind(title: String) {
-            ButterKnife.bind(itemView)
+            ButterKnife.bind(this, itemView)
             convoTitle.text = title
         }
 

@@ -8,13 +8,13 @@ import javax.inject.Inject
 
 class AuthActivity : AppCompatActivity() {
 
-    @Inject lateinit var authActivityViewModel: AuthActivityViewModel
+    @Inject lateinit var authViewModel: AuthViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         DaggerAuthComponent.builder().build().inject(this)
-        authActivityViewModel.authenticateLogin()
+        authViewModel.authenticateLogin()
     }
 
 }

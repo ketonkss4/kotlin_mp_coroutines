@@ -6,7 +6,7 @@ import co.happybits.mpcompanion.concurrency.KtDispatchers
 import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.launch
 
-class AuthActivityViewModel(
+class AuthViewModel(
         private val tokenProvider: TokenProvider,
         private val loginManager: LoginManager,
         private val dispatchers: KtDispatchers
@@ -14,9 +14,11 @@ class AuthActivityViewModel(
 
     fun authenticateLogin() {
         GlobalScope.launch(dispatchers.ioDispatcher()) {
-            loginManager.auth()
-            loginManager.login("6125018293", "US")
-            tokenProvider.setApiToken(loginManager.apiToken)
+            if(!loginManager.isRegistered) {
+                loginManager.auth()
+                loginManager.login("6125018293", "US")
+                tokenProvider.setApiToken(loginManager.apiToken)
+            }
         }
     }
 }

@@ -73,7 +73,7 @@ dependencies {
 
     //butterknife
     implementation "com.jakewharton:butterknife:$butterKnife_version"
-    annotationProcessor "com.jakewharton:butterknife-compiler:$butterKnife_version"
+    kapt "com.jakewharton:butterknife-compiler:$butterKnife_version"
     //okhttp
     implementation "com.squareup.okhttp3:logging-interceptor:$okhttp_version"
     implementation "com.squareup.okhttp3:okhttp:$okhttp_version"

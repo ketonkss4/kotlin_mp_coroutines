@@ -5,29 +5,32 @@ import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import butterknife.BindView
+import butterknife.ButterKnife
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
+import co.happybits.mpcompanion.authentication.AuthViewModel
 import co.happybits.mpcompanion.data.Conversation
+import co.happybits.mpcompanion.data.getMyUserId
 import co.happybits.mpcompanion.widget.dependencies.DaggerWidgetComponent
-import co.happybits.mpcompanion.widget.dependencies.WidgetController
 import javax.inject.Inject
 
 /**
  * The configuration screen for the [WidgetViewController] AppWidget.
  */
-class WidgetConfigureActivity : AppCompatActivity(), WidgetController {
+class WidgetConfigureActivity : AppCompatActivity() {
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     @BindView(R.id.conversations_list_view)
     lateinit var conversationsListView: RecyclerView
-    @Inject lateinit var widgetViewModel: WidgetViewModel
+    @Inject
+    lateinit var widgetViewModel: WidgetViewModel
+    @Inject
+    lateinit var authViewModel: AuthViewModel
     lateinit var adapter: ConfigListAdapter
 
     companion object {
@@ -53,20 +56,30 @@ class WidgetConfigureActivity : AppCompatActivity(), WidgetController {
         // Find the widget id from the intent.
         if (checkValidWidgetId()) return
         injectDaggerDependencies()
+        ButterKnife.bind(this)
+        ButterKnife.setDebug(true)
         adapter = ConfigListAdapter()
         conversationsListView.layoutManager = LinearLayoutManager(this)
         conversationsListView.adapter = adapter
         widgetViewModel.poloWidgetData.observe(this, Observer { adapter.refreshList(it) })
         adapter.selectData.observe(this, onConvoSelected())
+        authViewModel.authenticateLogin()
         widgetViewModel.requestConversationsListData()
     }
 
     private fun onConvoSelected(): Observer<Conversation> {
-        return Observer {
-            saveConvoIdPref(this, appWidgetId, it.conversation_id)
+        return Observer { conversation ->
+            saveConvoIdPref(this, appWidgetId, conversation.conversation_id)
 
-            val intent = Intent()
-            intent.putExtra(CONVO_INTENT_KEY, it.count_records)
+            val intent = Intent(this, WidgetService::class.java)
+            intent.putExtra(CONVO_INTENT_KEY, conversation.messages
+                    .entries
+                    .asSequence()
+                    .filter {entries ->
+                        val myUserId = conversation.members.getMyUserId()
+                        !entries.viewers.viewerIds.contains(myUserId)
+                    }
+                    .count().toString())
             startService(intent)
 
             val appWidgetManager = AppWidgetManager.getInstance(this)
