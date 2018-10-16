@@ -1,14 +1,18 @@
 package co.happybits.mpcompanion.widget
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
+import android.content.Intent
 import android.widget.RemoteViews
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
 import co.happybits.mpcompanion.concurrency.KtDispatchers
 import co.happybits.mpcompanion.data.Conversation
 import co.happybits.mpcompanion.data.getMyUserId
 import co.happybits.mpcompanion.networking.ServiceClientHelper
+import co.happybits.mpcompanion.widget.WidgetService.Companion.SERVICE_ACTION
 import co.happybits.mpcompanion.widget.persistence.WidgetPreferencesManager
 import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.launch
@@ -18,6 +22,10 @@ class WidgetViewModel(private val poloService: ServiceClientHelper.PoloService,
                       val poloWidgetData: MutableLiveData<List<Conversation>>,
                       private val widgetPreferencesManager: WidgetPreferencesManager
 ) : ViewModel() {
+
+    companion object {
+        const val CONVO_ID_KEY = "CONVO_ID_KEY"
+    }
 
     private suspend fun requestTargetConversationData(targetConversation: String): Conversation {
         val response = poloService.requestConversationSync().await()
@@ -39,6 +47,14 @@ class WidgetViewModel(private val poloService: ServiceClientHelper.PoloService,
         }
     }
 
+    fun createHeartReplyPendingIntent(convoId: String) : PendingIntent {
+        val context = MpCompanion.instance.applicationContext
+        val intent = Intent(context, WidgetService::class.java)
+        intent.action = SERVICE_ACTION
+        intent.putExtra(CONVO_ID_KEY, convoId)
+        return PendingIntent.getService(context, 0, intent, 0)
+    }
+
     fun updateWidgetData(
             appWidgetManager: AppWidgetManager,
             appWidgetIds: IntArray,
@@ -53,7 +69,8 @@ class WidgetViewModel(private val poloService: ServiceClientHelper.PoloService,
                             appWidgetManager,
                             appWidgetId,
                             remoteViews,
-                            poloWidget.unwatchedCount
+                            poloWidget.unwatchedCount,
+                            it
                     )
                 }
 
@@ -65,9 +82,11 @@ class WidgetViewModel(private val poloService: ServiceClientHelper.PoloService,
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int,
             views: RemoteViews,
-            widgetText: String = "0"
+            widgetText: String = "0",
+            convoId: String
     ) {
         views.setTextViewText(R.id.appwidget_text, widgetText)
+        views.setOnClickPendingIntent(R.id.appwidget_text, createHeartReplyPendingIntent(convoId))
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 

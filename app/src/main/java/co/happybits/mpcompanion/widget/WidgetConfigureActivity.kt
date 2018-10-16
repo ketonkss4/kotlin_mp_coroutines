@@ -15,6 +15,7 @@ import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
 import co.happybits.mpcompanion.authentication.AuthViewModel
 import co.happybits.mpcompanion.data.Conversation
+import co.happybits.mpcompanion.widget.WidgetViewModel.Companion.CONVO_ID_KEY
 import co.happybits.mpcompanion.widget.dependencies.DaggerWidgetComponent
 import javax.inject.Inject
 
@@ -33,8 +34,9 @@ class WidgetConfigureActivity : AppCompatActivity() {
     private lateinit var adapter: ConversationsListAdapter
 
     companion object {
-        const val CONVO_INTENT_KEY = "CONVO_INTENT_KEY"
+        const val UNWATCHED_COUNT_KEY = "UNWATCHED_COUNT_KEY"
         const val WIDGET_ID_KEY = "WIDGET_ID_KEY"
+        const val UPDATE_WIDGET_ACTION = "UPDATE_WIDGET_ACTION"
     }
 
     public override fun onCreate(icicle: Bundle?) {
@@ -65,13 +67,18 @@ class WidgetConfigureActivity : AppCompatActivity() {
 
             //start widget update service
             val intent = Intent(this, WidgetService::class.java)
-            intent.putExtra(CONVO_INTENT_KEY, widgetViewModel.getUnwatchedCount(conversation))
+            intent.action = UPDATE_WIDGET_ACTION
+            intent.putExtra(UNWATCHED_COUNT_KEY, widgetViewModel.getUnwatchedCount(conversation))
+            intent.putExtra(CONVO_ID_KEY, conversation.conversation_id)
             intent.putExtra(WIDGET_ID_KEY, appWidgetId)
             startService(intent)
 
             //update widget views and complete config
             val appWidgetManager = AppWidgetManager.getInstance(this)
-            widgetViewModel.updateWidgetView(appWidgetManager, appWidgetId, RemoteViews(packageName, R.layout.widget_view_controller))
+            widgetViewModel.updateWidgetView(appWidgetManager, appWidgetId, RemoteViews(
+                    packageName,
+                    R.layout.widget_view_controller
+            ), convoId = conversation.conversation_id)
             completeConfiguration()
         }
     }
