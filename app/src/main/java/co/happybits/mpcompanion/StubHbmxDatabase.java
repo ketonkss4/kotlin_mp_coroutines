@@ -133,12 +133,12 @@
 //    public static class ConversationUserTable implements ConversationUserTableIntf {
 //
 //        @Override
-//        public ConversationUserIntf queryOrCreateByConversationAndUser(ConversationIntf conversation, UserIntf user) {
+//        public ConversationUserIntf queryOrCreateByConversationAndUser(ConversationIntf conversations, UserIntf user) {
 //            return null;
 //        }
 //
 //        @Override
-//        public void updateLastWatchedMessage(long timestamp, ConversationIntf conversation, UserIntf user) {
+//        public void updateLastWatchedMessage(long timestamp, ConversationIntf conversations, UserIntf user) {
 //
 //        }
 //    }
@@ -146,12 +146,12 @@
 //    public static class MessageTable implements MessageTableIntf {
 //
 //        @Override
-//        public MessageIntf createVideoMessage(ConversationIntf conversation, VideoIntf video, UserIntf creator) {
+//        public MessageIntf createVideoMessage(ConversationIntf conversations, VideoIntf video, UserIntf creator) {
 //            return null;
 //        }
 //
 //        @Override
-//        public MessageIntf queryOrCreateByXid(@Nonnull String xid, ConversationIntf conversation, UserIntf creator) {
+//        public MessageIntf queryOrCreateByXid(@Nonnull String xid, ConversationIntf conversations, UserIntf creator) {
 //            return null;
 //        }
 //
@@ -172,7 +172,7 @@
 //
 //        @Nonnull
 //        @Override
-//        public ArrayList<MessageIntf> queryOldestUnwatched(ConversationIntf conversation, int limit) {
+//        public ArrayList<MessageIntf> queryOldestUnwatched(ConversationIntf conversations, int limit) {
 //            return new ArrayList<MessageIntf>();
 //        }
 //
@@ -199,7 +199,7 @@
 //    public static class ImageUploadTable implements ImageUploadTableIntf {
 //
 //        @Override
-//        public ImageUploadIntf createByXid(@Nonnull String xid, @Nonnull ImageUploadType imageUploadType, @Nonnull String contentType, UserIntf user, ConversationIntf conversation) {
+//        public ImageUploadIntf createByXid(@Nonnull String xid, @Nonnull ImageUploadType imageUploadType, @Nonnull String contentType, UserIntf user, ConversationIntf conversations) {
 //            return null;
 //        }
 //
@@ -217,7 +217,7 @@
 //
 //        @Nonnull
 //        @Override
-//        public ArrayList<ImageUploadIntf> queryAllByTypeAndConversation(@Nonnull ImageUploadType imageUploadType, ConversationIntf conversation) {
+//        public ArrayList<ImageUploadIntf> queryAllByTypeAndConversation(@Nonnull ImageUploadType imageUploadType, ConversationIntf conversations) {
 //            return new ArrayList<ImageUploadIntf>();
 //        }
 //    }

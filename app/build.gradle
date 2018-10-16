@@ -60,6 +60,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
     //support libs
     implementation "androidx.appcompat:appcompat:$androidX_version"
+    implementation "androidx.recyclerview:recyclerview:$androidX_version"
+    implementation "androidx.cardview:cardview:$androidX_version"
     implementation "androidx.constraintlayout:constraintlayout:$constraintlayoutX_version"
     //dagger
     implementation "com.google.dagger:dagger:$dagger_version"
@@ -78,7 +80,7 @@ dependencies {
     //retrofit
     implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
     implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
-    implementation 'com.jakewharton.retrofit:retrofit2-kotlin-coroutines-adapter:0.9.2'
+    implementation 'com.jakewharton.retrofit:retrofit2-kotlin-coroutines-experimental-adapter:1.0.0'
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.mockito:mockito-core:2.23.0'

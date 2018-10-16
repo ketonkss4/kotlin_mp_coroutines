@@ -5,7 +5,7 @@ import co.happybits.mpcompanion.injection.AppComponent
 import co.happybits.mpcompanion.injection.DaggerAppComponent
 
 class MpCompanion : Application() {
-
+    var authToken: String = ""
     companion object {
 
         @Volatile

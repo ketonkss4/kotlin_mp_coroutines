@@ -1,0 +1,3 @@
+package co.happybits.mpcompanion.widget.dependencies
+
+interface WidgetController

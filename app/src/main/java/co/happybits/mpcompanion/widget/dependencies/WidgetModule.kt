@@ -10,6 +10,10 @@ import dagger.Provides
 @Module class WidgetModule {
     @Provides fun provideWidgetViewModel(poloService: ServiceClientHelper.PoloService
     , dispatchers: KtDispatchers): WidgetViewModel {
-        return WidgetViewModel(poloService, dispatchers, MutableLiveData())
+        return WidgetViewModel(
+                poloService,
+                dispatchers,
+                MutableLiveData()
+        )
     }
 }

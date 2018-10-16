@@ -3,10 +3,17 @@ package co.happybits.mpcompanion.data
 
 data class Conversation(val group: Boolean,
                         val title: String,
-                        val conversation_id: Int,
+                        val count_records: String,
+                        val conversation_id: String,
                         val modified_at: String,
-                        val admins: List<Int>,
-                        val members: List<Member>,
-                        val messages: List<Message>,
-                        val sync: String,
-                        val `continue`: Boolean)
+                        val messages: Messages,
+                        val members: List<Member>)
+
+fun List<Member>.getMyUserId(): String? {
+    forEach {
+        if (it.isMyId()) {
+            return it.user_id
+        }
+    }
+    return null
+}

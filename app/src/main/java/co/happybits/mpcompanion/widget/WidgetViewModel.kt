@@ -1,33 +1,51 @@
 package co.happybits.mpcompanion.widget
 
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import co.happybits.mpcompanion.concurrency.KtDispatchers
 import co.happybits.mpcompanion.data.Conversation
+import co.happybits.mpcompanion.data.getMyUserId
 import co.happybits.mpcompanion.networking.ServiceClientHelper
 import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.launch
 
 class WidgetViewModel(private val poloService: ServiceClientHelper.PoloService,
                       private val dispatchers: KtDispatchers,
-                      private val poloWidgetData: MutableLiveData<PoloWidget> ) {
+                      val poloWidgetData: MutableLiveData<List<Conversation>>
+) : ViewModel() {
 
     companion object {
-        val TARGET_ID: Int = 100
+        val TARGET_ID: String = "100"
     }
 
-    private suspend fun requestConversationData(): Conversation {
+    private suspend fun requestTargetConversationData(): Conversation {
         //TODO replace test targetID with one from network
-        val conversations = poloService.requestConversationSync().await()
-        return conversations.first { it.conversation_id == TARGET_ID }
+        val response = poloService.requestConversationSync().await()
+        return response.conversations.first { it.conversation_id == TARGET_ID }
     }
 
-    fun syncWidgetData() {
+    suspend fun syncWidgetData(): PoloWidget {
+        val conversationData = requestTargetConversationData()
+        val poloWidget = PoloWidget(conversationId = conversationData.conversation_id,
+                name = conversationData.title,
+                unwatchedCount = conversationData
+                        .messages
+                        .entries
+                        .asSequence()
+                        .filter {
+                            val myUserId = conversationData.members.getMyUserId()
+                            !it.viewers.viewerIds.contains(myUserId)
+                        }
+                        .count()
+        )
+        return poloWidget
+    }
+
+    fun requestConversationsListData() {
         GlobalScope.launch(dispatchers.ioDispatcher()) {
-            val conversationData = requestConversationData()
-            poloWidgetData.postValue(PoloWidget(conversationId = conversationData.conversation_id,
-                    name = conversationData.title,
-                    unwatchedCount = conversationData.messages.filter { it.isUnwatchted() }.count()
-            ))
+            val response = poloService.requestConversationSync().await()
+            poloWidgetData.postValue(response.conversations)
         }
     }
+
 }

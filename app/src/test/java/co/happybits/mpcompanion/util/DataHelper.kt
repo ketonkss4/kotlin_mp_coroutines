@@ -13,7 +13,5 @@ fun buildTestConversation(
             "",
             emptyList(),
             emptyList(),
-            emptyList(),
-            "",
-            false)
+            emptyList())
 }

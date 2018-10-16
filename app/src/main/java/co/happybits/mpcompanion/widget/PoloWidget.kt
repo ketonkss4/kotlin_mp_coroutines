@@ -1,5 +1,5 @@
 package co.happybits.mpcompanion.widget
 
-data class PoloWidget(val conversationId: Int,
+data class PoloWidget(val conversationId: String,
                       val name: String,
                       val unwatchedCount: Int)

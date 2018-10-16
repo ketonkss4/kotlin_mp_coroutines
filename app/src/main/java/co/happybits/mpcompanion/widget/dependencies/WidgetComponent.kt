@@ -8,5 +8,5 @@ import dagger.Component
 @WidgetScope @Component(dependencies = [AppComponent::class], modules = [WidgetModule::class])
 interface WidgetComponent {
     val widgetViewModel: WidgetViewModel
-    fun inject(widgetViewController: WidgetViewController)
+    fun inject(widgetController: WidgetController)
 }

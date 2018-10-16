@@ -6,32 +6,42 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import butterknife.BindView
+import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
+import co.happybits.mpcompanion.data.Conversation
+import co.happybits.mpcompanion.widget.dependencies.DaggerWidgetComponent
+import co.happybits.mpcompanion.widget.dependencies.WidgetController
+import javax.inject.Inject
 
 /**
  * The configuration screen for the [WidgetViewController] AppWidget.
  */
-class WidgetConfigureActivity : AppCompatActivity() {
-    private var mAppWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
-    private lateinit var mAppWidgetText: EditText
-    private var mOnClickListener: View.OnClickListener = View.OnClickListener {
-        val context = this@WidgetConfigureActivity
+class WidgetConfigureActivity : AppCompatActivity(), WidgetController {
 
-        // When the button is clicked, store the string locally
-        val widgetText = mAppWidgetText.text.toString()
-        saveTitlePref(context, mAppWidgetId, widgetText)
+    private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+    @BindView(R.id.conversations_list_view)
+    lateinit var conversationsListView: RecyclerView
+    @Inject
+    lateinit var widgetViewModel: WidgetViewModel
+    lateinit var adapter: ConfigListAdapter
 
-        // It is the responsibility of the configuration activity to update the app widget
-        val appWidgetManager = AppWidgetManager.getInstance(context)
-        WidgetViewController.updateAppWidget(context, appWidgetManager, mAppWidgetId)
+    companion object {
 
-        // Make sure we pass back the original appWidgetId
-        val resultValue = Intent()
-        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, mAppWidgetId)
-        setResult(Activity.RESULT_OK, resultValue)
-        finish()
+        internal val PREFS_NAME = "co.happybits.mpcompanion.widget.NewAppWidget"
+        private val PREF_PREFIX_KEY = "appwidget_"
+        val CONVO_INTENT_KEY = "CONVO_INTENT_KEY"
+        // Write the prefix to the SharedPreferences object for this widget
+        internal fun saveConvoIdPref(context: Context, appWidgetId: Int, conversationId: String) {
+            val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+            prefs.putString(PREF_PREFIX_KEY + appWidgetId, conversationId)
+            prefs.apply()
+        }
     }
 
     public override fun onCreate(icicle: Bundle?) {
@@ -40,53 +50,60 @@ class WidgetConfigureActivity : AppCompatActivity() {
         // Set the result to CANCELED.  This will cause the widget host to cancel
         // out of the widget placement if the user presses the back button.
         setResult(Activity.RESULT_CANCELED)
-
         setContentView(R.layout.app_widget_configure)
-        mAppWidgetText = findViewById<View>(R.id.appwidget_text) as EditText
-        findViewById<View>(R.id.add_button).setOnClickListener(mOnClickListener)
-
         // Find the widget id from the intent.
+        if (checkValidWidgetId()) return
+        injectDaggerDependencies()
+        adapter = ConfigListAdapter()
+        conversationsListView.layoutManager = LinearLayoutManager(this)
+        conversationsListView.adapter = adapter
+        widgetViewModel.poloWidgetData.observe(this, Observer { adapter.refreshList(it) })
+        adapter.selectData.observe(this, onConvoSelected())
+        widgetViewModel.requestConversationsListData()
+    }
+
+    private fun onConvoSelected(): Observer<Conversation> {
+        return Observer {
+            saveConvoIdPref(this, appWidgetId, it.conversation_id)
+
+            val intent = Intent()
+            intent.putExtra(CONVO_INTENT_KEY, it.count_records)
+            startService(intent)
+
+            val appWidgetManager = AppWidgetManager.getInstance(this)
+            WidgetViewController.updateAppWidget(this, appWidgetManager, appWidgetId)
+            completeConfiguration()
+        }
+    }
+
+    private fun completeConfiguration() {
+        val resultValue = Intent()
+        resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+        setResult(Activity.RESULT_OK, resultValue)
+        finish()
+    }
+
+    private fun checkValidWidgetId(): Boolean {
         val intent = intent
         val extras = intent.extras
         if (extras != null) {
-            mAppWidgetId = extras.getInt(
+            appWidgetId = extras.getInt(
                     AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
         }
 
         // If this activity was started with an intent without an app widget ID, finish with an error.
-        if (mAppWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             finish()
-            return
+            return true
         }
-
-        mAppWidgetText.setText(loadTitlePref(this@WidgetConfigureActivity, mAppWidgetId))
+        return false
     }
 
-    companion object {
-
-        private val PREFS_NAME = "co.happybits.mpcompanion.widget.NewAppWidget"
-        private val PREF_PREFIX_KEY = "appwidget_"
-
-        // Write the prefix to the SharedPreferences object for this widget
-        internal fun saveTitlePref(context: Context, appWidgetId: Int, text: String) {
-            val prefs = context.getSharedPreferences(PREFS_NAME, 0).edit()
-            prefs.putString(PREF_PREFIX_KEY + appWidgetId, text)
-            prefs.apply()
-        }
-
-        // Read the prefix from the SharedPreferences object for this widget.
-        // If there is no preference saved, get the default from a resource
-        internal fun loadTitlePref(context: Context, appWidgetId: Int): String {
-            val prefs = context.getSharedPreferences(PREFS_NAME, 0)
-            val titleValue = prefs.getString(PREF_PREFIX_KEY + appWidgetId, null)
-            return titleValue ?: context.getString(R.string.appwidget_text)
-        }
-
-        internal fun deleteTitlePref(context: Context, appWidgetId: Int) {
-            val prefs = context.getSharedPreferences(PREFS_NAME, 0).edit()
-            prefs.remove(PREF_PREFIX_KEY + appWidgetId)
-            prefs.apply()
-        }
+    private fun injectDaggerDependencies() {
+        DaggerWidgetComponent.builder()
+                .appComponent(MpCompanion.appComponent)
+                .build()
+                .inject(this)
     }
 }
 

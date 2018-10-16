@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">MPCompanion</string>
-    <string name="appwidget_text">Test Widget</string>
+    <string name="appwidget_text">0</string>
     <string name="add_widget">Add widget</string>
-    <string name="configure">Configure</string>
+    <string name="configure_instrustions_text">Select conversation to track</string>
+    <string name="convo_item_label">Conversation</string>
 </resources>
