@@ -4,6 +4,7 @@ import co.happybits.mpcompanion.authentication.dependencies.LoginManager
 import co.happybits.mpcompanion.authentication.dependencies.TokenProvider
 import co.happybits.mpcompanion.concurrency.KtDispatchers
 import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.launch
 
 class AuthViewModel(
@@ -12,8 +13,8 @@ class AuthViewModel(
         private val dispatchers: KtDispatchers
 ) {
 
-    fun authenticateLogin() {
-        GlobalScope.launch(dispatchers.ioDispatcher()) {
+    fun authenticateLogin(): Job {
+        return GlobalScope.launch(dispatchers.ioDispatcher()) {
             if(!loginManager.isRegistered) {
                 loginManager.auth()
                 loginManager.login("6125018293", "US")

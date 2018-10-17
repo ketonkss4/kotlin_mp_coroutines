@@ -4,6 +4,8 @@ import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
+import android.view.View.GONE
+import android.widget.ProgressBar
 import android.widget.RemoteViews
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
@@ -15,9 +17,13 @@ import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
 import co.happybits.mpcompanion.authentication.AuthViewModel
 import co.happybits.mpcompanion.data.Conversation
+import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.UNWATCHED_COUNT_KEY
+import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.WIDGET_ID_KEY
 import co.happybits.mpcompanion.widget.WidgetService.Companion.START_WIDGET_ACTION
 import co.happybits.mpcompanion.widget.WidgetViewModel.Companion.CONVO_ID_KEY
 import co.happybits.mpcompanion.widget.dependencies.DaggerWidgetComponent
+import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.android.Main
 import javax.inject.Inject
 
 /**
@@ -28,6 +34,8 @@ class WidgetConfigureActivity : AppCompatActivity() {
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     @BindView(R.id.conversations_list_view)
     lateinit var conversationsListView: RecyclerView
+    @BindView(R.id.progress_bar)
+    lateinit var progressIndicator: ProgressBar
     @Inject
     lateinit var widgetViewModel: WidgetViewModel
     @Inject
@@ -54,16 +62,22 @@ class WidgetConfigureActivity : AppCompatActivity() {
         adapter = ConversationsListAdapter()
         conversationsListView.layoutManager = LinearLayoutManager(this)
         conversationsListView.adapter = adapter
-        widgetViewModel.poloWidgetData.observe(this, Observer { adapter.refreshList(it) })
+        widgetViewModel.poloWidgetData.observe(this, Observer {
+            adapter.refreshList(it)
+            progressIndicator.visibility = GONE
+        })
         adapter.selectData.observe(this, onConvoSelected())
-        authViewModel.authenticateLogin()
-        widgetViewModel.requestConversationsListData()
+
+        GlobalScope.launch(Dispatchers.Main) {
+            authViewModel.authenticateLogin().join()
+            widgetViewModel.requestConversationsListData()
+        }
     }
 
     private fun onConvoSelected(): Observer<Conversation> {
         return Observer { conversation ->
             //save convo id to update widget periodically later
-            widgetViewModel.saveConversationId( appWidgetId, conversation.conversation_id)
+            widgetViewModel.saveConversationId(appWidgetId, conversation.conversation_id)
 
             //start widget update service
             val intent = Intent(this, WidgetService::class.java)
