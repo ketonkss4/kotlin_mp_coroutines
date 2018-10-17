@@ -14,5 +14,7 @@ fun buildTestConversation(
             conversation_id,
             "",
             Messages(emptyList()),
-            emptyList())
+            emptyList(),
+            ""
+    )
 }

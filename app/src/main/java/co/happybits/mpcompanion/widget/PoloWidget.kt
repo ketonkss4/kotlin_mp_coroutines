@@ -1,5 +1,7 @@
 package co.happybits.mpcompanion.widget
 
+import java.io.Serializable
+
 data class PoloWidget(val conversationId: String,
-                      val name: String,
-                      val unwatchedCount: String)
+                      val title: String,
+                      val unwatchedCount: String) : Serializable

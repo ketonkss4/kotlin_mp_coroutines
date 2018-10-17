@@ -6,39 +6,39 @@ import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.WIDGET_UPDATE_INTERVAL
 import co.happybits.mpcompanion.authentication.dependencies.LoginManager
 import co.happybits.mpcompanion.networking.ServiceClientHelper
-import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.UNWATCHED_COUNT_KEY
+import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.CONVO_ID_KEY
+import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.POLO_WIDGET_KEY
 import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.WIDGET_ID_KEY
-import co.happybits.mpcompanion.widget.WidgetViewModel.Companion.CONVO_ID_KEY
-import java.net.URLEncoder
 import javax.inject.Inject
 
 class WidgetService : IntentService("Widget Service") {
 
-    @Inject lateinit var poloService: ServiceClientHelper.PoloService
+    @Inject
+    lateinit var poloService: ServiceClientHelper.PoloService
 
     companion object {
-        const val WIDGET_UPDATE = "android.appwidget.action.APPWIDGET_UPDATE"
+        const val WIDGET_SYSTEM_UPDATE = "android.appwidget.action.APPWIDGET_UPDATE"
         const val SERVICE_ACTION = "SERVICE_ACTION"
         const val START_WIDGET_ACTION = "START_WIDGET_ACTION"
         const val UPDATE_WIDGET_ACTION = "UPDATE_WIDGET_ACTION"
 
         fun startRecurringWidgetUpdateService(context: Context) {
             val updateWidgetIntent = Intent(context, WidgetViewProvider::class.java)
-            updateWidgetIntent.action = WIDGET_UPDATE
-            updateWidgetIntent.putExtra(UPDATE_WIDGET_ACTION, UPDATE_WIDGET_ACTION)
+            updateWidgetIntent.action = UPDATE_WIDGET_ACTION
             val pendingIntent = PendingIntent.getBroadcast(context, 0, updateWidgetIntent, 0)
             val alarmManager: AlarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val interval = (WIDGET_UPDATE_INTERVAL)
             alarmManager.setRepeating(AlarmManager.RTC_WAKEUP, System.currentTimeMillis(), interval, pendingIntent)
         }
 
-        fun stoptRecurringWidgetUpdateService(context: Context) {
+        fun stopRecurringWidgetUpdateService(context: Context) {
             val updateWidgetIntent = Intent(context, WidgetViewProvider::class.java)
-            updateWidgetIntent.action = WIDGET_UPDATE
+            updateWidgetIntent.action = UPDATE_WIDGET_ACTION
             val pendingIntent = PendingIntent.getBroadcast(context, 0, updateWidgetIntent, 0)
             val alarmManager: AlarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             alarmManager.cancel(pendingIntent)
@@ -53,14 +53,9 @@ class WidgetService : IntentService("Widget Service") {
     override fun onHandleIntent(receivedIntent: Intent) {
         when (receivedIntent.action) {
             START_WIDGET_ACTION -> {
-                val intent = Intent(WIDGET_UPDATE)
-                intent.action = WIDGET_UPDATE
-                intent.putExtra(START_WIDGET_ACTION, START_WIDGET_ACTION)
-                intent.putExtra(
-                        UNWATCHED_COUNT_KEY,
-                        receivedIntent.getStringExtra(UNWATCHED_COUNT_KEY)
-                )
-                intent.putExtra(CONVO_ID_KEY, receivedIntent.getStringExtra(CONVO_ID_KEY))
+                val intent = Intent(applicationContext, WidgetViewProvider::class.java)
+                intent.action = START_WIDGET_ACTION
+                intent.putExtra(POLO_WIDGET_KEY, receivedIntent.getSerializableExtra(POLO_WIDGET_KEY))
                 intent.putExtra(WIDGET_ID_KEY, receivedIntent.getIntExtra(
                         WIDGET_ID_KEY,
                         AppWidgetManager.INVALID_APPWIDGET_ID
@@ -70,16 +65,22 @@ class WidgetService : IntentService("Widget Service") {
             SERVICE_ACTION -> {
                 val convoId = receivedIntent.getStringExtra(CONVO_ID_KEY)
                 //TODO invalid emoji input must correct
-                poloService.sendMessage(
+                val request = poloService.sendMessage(
                         convoId,
                         LoginManager.createXID(),
-                        URLEncoder.encode(heartEmoji(), "UTF-8")
+                        heartEmoji()
                 )
             }
         }
 
     }
 
-    private fun heartEmoji() = String(Character.toChars(0x2764))
+    private fun notifyUserOfResult(resultText: String) {
+        Toast.makeText(applicationContext,
+                resultText,
+                Toast.LENGTH_SHORT).show()
+    }
+
+    private fun heartEmoji() = "u+2764"
 
 }

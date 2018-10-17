@@ -7,7 +7,8 @@ data class Conversation(val group: Boolean,
                         val conversation_id: String,
                         val modified_at: String,
                         val messages: Messages,
-                        val members: List<Member>)
+                        val members: List<Member>,
+                        val creator_id: String)
 
 fun List<Member>.getMyUserId(): String? {
     forEach {
@@ -16,4 +17,34 @@ fun List<Member>.getMyUserId(): String? {
         }
     }
     return null
+}
+
+fun Conversation.getConversationTitle(): String {
+    if (!title.isNullOrEmpty()) {
+        return title
+    } else {
+        if (group) {
+            members.forEach {
+                if (it.user_id == creator_id) {
+                    return "${it.first_name}'s Group"
+                }
+            }
+            return "Group"
+        } else {
+            val member = members.find { !it.isMyId() } as Member
+            return "${member.first_name} ${member.last_name}"
+        }
+    }
+}
+
+fun Conversation.getUnwatchedCount(): String {
+    val myUserId = members.getMyUserId()
+    val filteredCollection = messages.entries
+    return if (filteredCollection.count { it.viewers == null } > 0) {
+        filteredCollection.count { it.viewers == null }.toString()
+    } else {
+        filteredCollection
+                .count { entries -> !entries.viewers!!.viewerIds.contains(myUserId) }
+                .toString()
+    }
 }

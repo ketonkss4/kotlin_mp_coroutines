@@ -1,6 +1,5 @@
 package co.happybits.mpcompanion.widget
 
-import android.app.AlarmManager
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
@@ -9,11 +8,10 @@ import android.content.Intent
 import android.widget.RemoteViews
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
-import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.UNWATCHED_COUNT_KEY
+import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.POLO_WIDGET_KEY
 import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.WIDGET_ID_KEY
 import co.happybits.mpcompanion.widget.WidgetService.Companion.START_WIDGET_ACTION
 import co.happybits.mpcompanion.widget.WidgetService.Companion.UPDATE_WIDGET_ACTION
-import co.happybits.mpcompanion.widget.WidgetViewModel.Companion.CONVO_ID_KEY
 import co.happybits.mpcompanion.widget.dependencies.DaggerWidgetComponent
 import javax.inject.Inject
 
@@ -41,27 +39,31 @@ class WidgetViewProvider : AppWidgetProvider() {
                 WidgetViewProvider::class.java
         ))
 
-        if (intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
-            if (intent.hasExtra(START_WIDGET_ACTION)) {
+        when (intent.action) {
+            START_WIDGET_ACTION -> {
                 //start widget with initial data from configuration request
-                val widgetText = intent.getStringExtra(UNWATCHED_COUNT_KEY)
-                val convoId = intent.getStringExtra(CONVO_ID_KEY)
+                val poloWidget = intent.getSerializableExtra(POLO_WIDGET_KEY) as PoloWidget
                 val targetWidget = intent.getIntExtra(WIDGET_ID_KEY, AppWidgetManager.INVALID_APPWIDGET_ID)
                 for (id in appWidgetIds) {
                     if (targetWidget == id) widgetViewModel.updateWidgetView(
                             appWidgetManager,
                             id,
                             RemoteViews(context.packageName, R.layout.widget_view_controller),
-                            widgetText,
-                            convoId
+                            poloWidget
                     )
                 }
             }
 
-            if (intent.hasExtra(UPDATE_WIDGET_ACTION)) {
+            UPDATE_WIDGET_ACTION -> {
+                //update widgets on regular interval
                 onUpdate(context, appWidgetManager, appWidgetIds)
             }
         }
+    }
+
+    override fun onEnabled(context: Context) {
+        super.onEnabled(context)
+        WidgetService.startRecurringWidgetUpdateService(context)
     }
 
     override fun onDisabled(context: Context) {
@@ -69,7 +71,7 @@ class WidgetViewProvider : AppWidgetProvider() {
         if (MpCompanion.instance.isMyServiceRunning(WidgetService::class.java)) {
             val intent = Intent(context, WidgetService::class.java)
             MpCompanion.instance.stopService(intent)
-            WidgetService.stoptRecurringWidgetUpdateService(context)
+            WidgetService.stopRecurringWidgetUpdateService(context)
         }
     }
 

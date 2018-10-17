@@ -17,13 +17,14 @@ import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
 import co.happybits.mpcompanion.authentication.AuthViewModel
 import co.happybits.mpcompanion.data.Conversation
-import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.UNWATCHED_COUNT_KEY
-import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.WIDGET_ID_KEY
+import co.happybits.mpcompanion.data.getConversationTitle
+import co.happybits.mpcompanion.data.getUnwatchedCount
 import co.happybits.mpcompanion.widget.WidgetService.Companion.START_WIDGET_ACTION
-import co.happybits.mpcompanion.widget.WidgetViewModel.Companion.CONVO_ID_KEY
 import co.happybits.mpcompanion.widget.dependencies.DaggerWidgetComponent
-import kotlinx.coroutines.experimental.*
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.android.Main
+import kotlinx.coroutines.experimental.launch
 import javax.inject.Inject
 
 /**
@@ -43,7 +44,8 @@ class WidgetConfigureActivity : AppCompatActivity() {
     private lateinit var adapter: ConversationsListAdapter
 
     companion object {
-        const val UNWATCHED_COUNT_KEY = "UNWATCHED_COUNT_KEY"
+        const val POLO_WIDGET_KEY = "POLO_WIDGET_KEY"
+        const val CONVO_ID_KEY = "CONVO_ID_KEY"
         const val WIDGET_ID_KEY = "WIDGET_ID_KEY"
     }
 
@@ -78,21 +80,23 @@ class WidgetConfigureActivity : AppCompatActivity() {
         return Observer { conversation ->
             //save convo id to update widget periodically later
             widgetViewModel.saveConversationId(appWidgetId, conversation.conversation_id)
-
+            val poloWidget = PoloWidget(
+                    conversation.conversation_id,
+                    conversation.getConversationTitle(),
+                    conversation.getUnwatchedCount()
+            )
             //start widget update service
             val intent = Intent(this, WidgetService::class.java)
             intent.action = START_WIDGET_ACTION
-            intent.putExtra(UNWATCHED_COUNT_KEY, widgetViewModel.getUnwatchedCount(conversation))
-            intent.putExtra(CONVO_ID_KEY, conversation.conversation_id)
+            intent.putExtra(POLO_WIDGET_KEY, poloWidget)
             intent.putExtra(WIDGET_ID_KEY, appWidgetId)
             startService(intent)
-            WidgetService.startRecurringWidgetUpdateService(applicationContext)
             //update widget views and complete config
             val appWidgetManager = AppWidgetManager.getInstance(this)
             widgetViewModel.updateWidgetView(appWidgetManager, appWidgetId, RemoteViews(
                     packageName,
                     R.layout.widget_view_controller
-            ), convoId = conversation.conversation_id)
+            ), poloWidget)
             completeConfiguration()
         }
     }
