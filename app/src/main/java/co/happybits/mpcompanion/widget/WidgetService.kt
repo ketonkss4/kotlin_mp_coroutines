@@ -22,7 +22,6 @@ class WidgetService : IntentService("Widget Service") {
     lateinit var poloService: ServiceClientHelper.PoloService
 
     companion object {
-        const val WIDGET_SYSTEM_UPDATE = "android.appwidget.action.APPWIDGET_UPDATE"
         const val SERVICE_ACTION = "SERVICE_ACTION"
         const val START_WIDGET_ACTION = "START_WIDGET_ACTION"
         const val UPDATE_WIDGET_ACTION = "UPDATE_WIDGET_ACTION"

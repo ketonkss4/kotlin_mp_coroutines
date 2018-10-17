@@ -79,7 +79,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
     private fun onConvoSelected(): Observer<Conversation> {
         return Observer { conversation ->
             //save convo id to update widget periodically later
-            widgetViewModel.saveConversationId(appWidgetId, conversation.conversation_id)
+            widgetViewModel.startTrackingConversationId(appWidgetId, conversation.conversation_id)
             val poloWidget = PoloWidget(
                     conversation.conversation_id,
                     conversation.getConversationTitle(),
@@ -91,12 +91,6 @@ class WidgetConfigureActivity : AppCompatActivity() {
             intent.putExtra(POLO_WIDGET_KEY, poloWidget)
             intent.putExtra(WIDGET_ID_KEY, appWidgetId)
             startService(intent)
-            //update widget views and complete config
-            val appWidgetManager = AppWidgetManager.getInstance(this)
-            widgetViewModel.updateWidgetView(appWidgetManager, appWidgetId, RemoteViews(
-                    packageName,
-                    R.layout.widget_view_controller
-            ), poloWidget)
             completeConfiguration()
         }
     }

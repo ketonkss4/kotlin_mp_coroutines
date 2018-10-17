@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.widget.RemoteViews
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
@@ -38,9 +39,9 @@ class WidgetViewProvider : AppWidgetProvider() {
                 context,
                 WidgetViewProvider::class.java
         ))
-
         when (intent.action) {
             START_WIDGET_ACTION -> {
+                Log.v("DEBUGGING MP", "Widget Start Action! Count = ${appWidgetIds.count()}")
                 //start widget with initial data from configuration request
                 val poloWidget = intent.getSerializableExtra(POLO_WIDGET_KEY) as PoloWidget
                 val targetWidget = intent.getIntExtra(WIDGET_ID_KEY, AppWidgetManager.INVALID_APPWIDGET_ID)
@@ -55,23 +56,38 @@ class WidgetViewProvider : AppWidgetProvider() {
             }
 
             UPDATE_WIDGET_ACTION -> {
+                Log.v("DEBUGGING MP", "Widget Service Update Action")
                 //update widgets on regular interval
                 onUpdate(context, appWidgetManager, appWidgetIds)
             }
+
+            //due to overriding onReceive must handle widget intents manually
+            AppWidgetManager.ACTION_APPWIDGET_ENABLED,
+            AppWidgetManager.ACTION_APPWIDGET_DISABLED,
+            AppWidgetManager.ACTION_APPWIDGET_DELETED -> super.onReceive(context, intent)
         }
     }
 
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
+        Log.v("DEBUGGING MP", "Widget Enabled!")
+
         WidgetService.startRecurringWidgetUpdateService(context)
     }
 
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        super.onDeleted(context, appWidgetIds)
+        Log.v("DEBUGGING MP", "Widget Deleted: ${appWidgetIds.count()}")
+        appWidgetIds.forEach { widgetViewModel.stopTrackingConversationId(it) }
+    }
+
     override fun onDisabled(context: Context) {
+        Log.v("DEBUGGING MP", "Widgets Disabled")
         super.onDisabled(context)
+        WidgetService.stopRecurringWidgetUpdateService(context)
         if (MpCompanion.instance.isMyServiceRunning(WidgetService::class.java)) {
             val intent = Intent(context, WidgetService::class.java)
             MpCompanion.instance.stopService(intent)
-            WidgetService.stopRecurringWidgetUpdateService(context)
         }
     }
 

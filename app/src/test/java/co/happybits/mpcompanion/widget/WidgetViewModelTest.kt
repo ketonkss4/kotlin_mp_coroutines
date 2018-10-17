@@ -6,10 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import co.happybits.mpcompanion.R
 import co.happybits.mpcompanion.concurrency.AppDispatchers
 import co.happybits.mpcompanion.concurrency.KtDispatchers
-import co.happybits.mpcompanion.data.Conversation
-import co.happybits.mpcompanion.data.Response
-import co.happybits.mpcompanion.data.Viewers
-import co.happybits.mpcompanion.data.ViewersDeserializer
+import co.happybits.mpcompanion.data.*
 import co.happybits.mpcompanion.networking.ServiceClientHelper
 import co.happybits.mpcompanion.util.SingleVideoConversationData
 import co.happybits.mpcompanion.util.buildTestConversation
@@ -59,7 +56,7 @@ class WidgetViewModelTest {
     @Test
     fun testShouldReturnZeroCount_OnGetUnwatchedVideoCount() {
         val conversation = buildTestConversation()
-        val count = widgetViewModel.getUnwatchedCount(conversation)
+        val count = conversation.getUnwatchedCount()
         assert(count == "0")
     }
 
@@ -70,7 +67,7 @@ class WidgetViewModelTest {
                 .create()
         val response = gson.fromJson(SingleVideoConversationData, Response::class.java)
         val conversation = response.conversations.first()
-        val count = widgetViewModel.getUnwatchedCount(conversation)
+        val count = conversation.getUnwatchedCount()
         assert(count == "1")
     }
 

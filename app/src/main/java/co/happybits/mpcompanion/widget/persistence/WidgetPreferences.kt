@@ -15,6 +15,12 @@ class WidgetPreferences(private val applicationContext: Context) : WidgetPrefere
         prefs.apply()
     }
 
+    override fun removeConvoIdPref(appWidgetId: Int) {
+        val prefs = applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+        prefs.remove(PREF_PREFIX_KEY + appWidgetId)
+        prefs.apply()
+    }
+
     override fun getConvoIdPref(appWidgetId: Int): String? {
         val prefs = applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         return prefs.getString(PREF_PREFIX_KEY + appWidgetId, null)
