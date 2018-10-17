@@ -1,16 +1,26 @@
 package co.happybits.mpcompanion.networking
 
-import co.happybits.mpcompanion.MpCompanion
+import co.happybits.mpcompanion.authentication.AuthViewModel
+import co.happybits.mpcompanion.authentication.dependencies.DaggerAuthComponent
 import co.happybits.mpcompanion.data.Viewers
 import co.happybits.mpcompanion.data.ViewersDeserializer
 import com.google.gson.GsonBuilder
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.experimental.CoroutineCallAdapterFactory
+import kotlinx.coroutines.experimental.runBlocking
 import okhttp3.OkHttpClient
+import okhttp3.Request
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Inject
 
 class ServiceClientHelper {
+    @Inject
+    lateinit var authViewModel: AuthViewModel
+
+    init {
+        DaggerAuthComponent.builder().build().inject(this)
+    }
 
     private fun getOkHttpClient(): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor()
@@ -18,13 +28,25 @@ class ServiceClientHelper {
         val httpClientBuilder = OkHttpClient.Builder()
         httpClientBuilder.addInterceptor(loggingInterceptor)
         httpClientBuilder.addInterceptor {
-            val request = it.request().newBuilder().addHeader(
-                    "Authorization",
-                    MpCompanion.instance.authToken
-            ).build()
-            it.proceed(request)
+            val request = buildAuthorizedRequest(it.request(), authViewModel.getAuthentication())
+            val response = it.proceed(request)
+            if (response.code() == 401) {
+                runBlocking { authViewModel.reAuthenticate() }
+                val reAuthRequest = buildAuthorizedRequest(request, authViewModel.getAuthentication())
+                it.proceed(reAuthRequest)
+            } else {
+                response
+            }
+
         }
         return httpClientBuilder.build()
+    }
+
+    fun buildAuthorizedRequest(request: Request, authToken: String): Request {
+        return request.newBuilder().addHeader(
+                "Authorization",
+                authViewModel.getAuthentication()
+        ).build()
     }
 
     fun buildService(): PoloService {

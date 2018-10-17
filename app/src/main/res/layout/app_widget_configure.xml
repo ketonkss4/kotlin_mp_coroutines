@@ -1,28 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:gravity="center"
-        android:text="@string/configure_instrustions_text" />
+    <include
+        android:id="@+id/authentication_view"
+        layout="@layout/activity_main" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/conversations_list_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+    <include
+        android:id="@+id/widget_selection_view"
+        layout="@layout/widget_convo_selection_view" />
 
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        style="?android:progressBarStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        />
 
-</LinearLayout>
+</FrameLayout>

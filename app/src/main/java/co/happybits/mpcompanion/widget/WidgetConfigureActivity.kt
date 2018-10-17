@@ -4,9 +4,13 @@ import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.os.Bundle
+import android.telephony.PhoneNumberFormattingTextWatcher
+import android.view.View
 import android.view.View.GONE
+import android.view.View.VISIBLE
+import android.widget.Button
+import android.widget.EditText
 import android.widget.ProgressBar
-import android.widget.RemoteViews
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,15 +20,12 @@ import butterknife.ButterKnife
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
 import co.happybits.mpcompanion.authentication.AuthViewModel
+import co.happybits.mpcompanion.authentication.dependencies.persistence.hasSavedAuth
 import co.happybits.mpcompanion.data.Conversation
 import co.happybits.mpcompanion.data.getConversationTitle
 import co.happybits.mpcompanion.data.getUnwatchedCount
 import co.happybits.mpcompanion.widget.WidgetService.Companion.START_WIDGET_ACTION
 import co.happybits.mpcompanion.widget.dependencies.DaggerWidgetComponent
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.GlobalScope
-import kotlinx.coroutines.experimental.android.Main
-import kotlinx.coroutines.experimental.launch
 import javax.inject.Inject
 
 /**
@@ -37,6 +38,14 @@ class WidgetConfigureActivity : AppCompatActivity() {
     lateinit var conversationsListView: RecyclerView
     @BindView(R.id.progress_bar)
     lateinit var progressIndicator: ProgressBar
+    @BindView(R.id.editText)
+    lateinit var phoneNumberInput: EditText
+    @BindView(R.id.button)
+    lateinit var authenticateButton: Button
+    @BindView(R.id.authentication_view)
+    lateinit var authenticationView: View
+    @BindView(R.id.widget_selection_view)
+    lateinit var widgetSelectionView: View
     @Inject
     lateinit var widgetViewModel: WidgetViewModel
     @Inject
@@ -69,17 +78,46 @@ class WidgetConfigureActivity : AppCompatActivity() {
             progressIndicator.visibility = GONE
         })
         adapter.selectData.observe(this, onConvoSelected())
+        authenticationView.visibility = GONE
 
-        GlobalScope.launch(Dispatchers.Main) {
-            authViewModel.authenticateLogin().join()
+        if (!authViewModel.authPrefs.hasSavedAuth()) {
+            displayUserAuthetication()
+        } else {
             widgetViewModel.requestConversationsListData()
         }
+    }
+
+    private fun displayUserAuthetication() {
+        authenticationView.visibility = VISIBLE
+        widgetSelectionView.visibility = GONE
+        phoneNumberInput.addTextChangedListener(PhoneNumberFormattingTextWatcher())
+        if (authViewModel.authPrefs.hasSavedAuth()) {
+            phoneNumberInput.setText(authViewModel.authPrefs.getPhoneAuthPref())
+            authenticateButton.text = "Re-Autheticate"
+        }
+        authenticateButton.setOnClickListener {
+            val number = phoneNumberInput.text.toString()
+            authViewModel.onWidgetTriggeredAuthentication(
+                    this,
+                    number
+            ) { displayWidgetSelectionView() }
+        }
+    }
+
+    private fun displayWidgetSelectionView() {
+        authenticationView.visibility = GONE
+        widgetSelectionView.visibility = VISIBLE
+
+        widgetViewModel.requestConversationsListData()
     }
 
     private fun onConvoSelected(): Observer<Conversation> {
         return Observer { conversation ->
             //save convo id to update widget periodically later
-            widgetViewModel.startTrackingConversationId(appWidgetId, conversation.conversation_id)
+            widgetViewModel.startTrackingConversationId(
+                    appWidgetId,
+                    conversation.conversation_id
+            )
             val poloWidget = PoloWidget(
                     conversation.conversation_id,
                     conversation.getConversationTitle(),
@@ -94,7 +132,6 @@ class WidgetConfigureActivity : AppCompatActivity() {
             completeConfiguration()
         }
     }
-
 
 
     private fun completeConfiguration() {

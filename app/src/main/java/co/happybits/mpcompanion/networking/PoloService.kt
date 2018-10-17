@@ -32,10 +32,6 @@ suspend fun PoloService.syncConversationData() : Response {
         hasNext = continuedResponse.`continue`
         syncId = continuedResponse.sync
         if(continuedResponse.conversations.isNotEmpty()) response = continuedResponse
-//        continuedResponse.conversations.forEachIndexed { index, conversation ->
-//            val additionalEntries = conversation.messages.entries
-//            response.conversations[index].messages.entries.addAll(additionalEntries)
-//        }
     }
     response.conversations.forEach {
         Log.v("DEBUGGING MP", "Add additional videos ConvoId = ${it.conversation_id}  " +

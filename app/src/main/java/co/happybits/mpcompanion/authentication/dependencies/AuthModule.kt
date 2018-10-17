@@ -2,6 +2,8 @@ package co.happybits.mpcompanion.authentication.dependencies
 
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.authentication.AuthViewModel
+import co.happybits.mpcompanion.authentication.dependencies.persistence.AuthPreferences
+import co.happybits.mpcompanion.authentication.dependencies.persistence.AuthPreferencesManager
 import co.happybits.mpcompanion.concurrency.KtDispatchers
 import dagger.Module
 import dagger.Provides
@@ -9,17 +11,25 @@ import dagger.Provides
 @Module
 class AuthModule {
 
-    @Provides fun provideAuthActivityViewModel(
+    @Provides
+    fun provideAuthActivityViewModel(
             dispatchers: KtDispatchers,
-            loginManager: LoginManager
+            loginManager: LoginManager,
+            authPreferencesManager: AuthPreferencesManager
     ): AuthViewModel {
-        return AuthViewModel(MpCompanion.instance,
+        return AuthViewModel(
                 loginManager,
-                dispatchers
+                dispatchers,
+                authPreferencesManager
         )
     }
 
-    @Provides fun provideLoginManager() : LoginManager {
+    @Provides
+    fun provideLoginManager(): LoginManager {
         return LoginManager.getInstance()
     }
+
+    @Provides
+    fun provideAuthPreferencesManager(): AuthPreferencesManager = AuthPreferences(MpCompanion.instance)
+
 }
