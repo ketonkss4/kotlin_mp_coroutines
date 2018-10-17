@@ -2,7 +2,7 @@ package co.happybits.mpcompanion.injection
 
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.concurrency.KtDispatchers
-import co.happybits.mpcompanion.networking.ServiceClientHelper
+import co.happybits.mpcompanion.networking.PoloService
 import co.happybits.mpcompanion.widget.WidgetService
 import dagger.BindsInstance
 import dagger.Component
@@ -19,7 +19,7 @@ interface AppComponent {
         fun build(): AppComponent
     }
 
-    fun service(): ServiceClientHelper.PoloService
+    fun service(): PoloService
     fun dispatchers(): KtDispatchers
     fun inject(app: MpCompanion)
     fun inject(app: WidgetService)

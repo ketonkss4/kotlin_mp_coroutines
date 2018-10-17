@@ -39,12 +39,12 @@ fun Conversation.getConversationTitle(): String {
 
 fun Conversation.getUnwatchedCount(): String {
     val myUserId = members.getMyUserId()
-    val filteredCollection = messages.entries
-    return if (filteredCollection.count { it.viewers == null } > 0) {
-        filteredCollection.count { it.viewers == null }.toString()
-    } else {
-        filteredCollection
-                .count { entries -> !entries.viewers!!.viewerIds.contains(myUserId) }
-                .toString()
+    val entries = messages.entries
+    var count = 0
+    entries.filter { it.isVideo() }
+            .filter { !it.creator.isMyId() }
+            .forEach { entry ->
+        if (entry.viewers == null || !entry.viewers.viewerIds.contains(myUserId)) count++
     }
+    return count.toString()
 }

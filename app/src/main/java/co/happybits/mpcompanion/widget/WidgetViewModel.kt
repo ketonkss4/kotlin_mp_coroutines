@@ -13,21 +13,22 @@ import co.happybits.mpcompanion.concurrency.KtDispatchers
 import co.happybits.mpcompanion.data.Conversation
 import co.happybits.mpcompanion.data.getConversationTitle
 import co.happybits.mpcompanion.data.getUnwatchedCount
-import co.happybits.mpcompanion.networking.ServiceClientHelper
+import co.happybits.mpcompanion.networking.PoloService
+import co.happybits.mpcompanion.networking.syncConversationData
 import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.CONVO_ID_KEY
 import co.happybits.mpcompanion.widget.WidgetService.Companion.SERVICE_ACTION
 import co.happybits.mpcompanion.widget.persistence.WidgetPreferencesManager
 import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.launch
 
-class WidgetViewModel(private val poloService: ServiceClientHelper.PoloService,
+class WidgetViewModel(private val poloService: PoloService,
                       private val dispatchers: KtDispatchers,
                       val poloWidgetData: MutableLiveData<List<Conversation>>,
                       private val widgetPreferencesManager: WidgetPreferencesManager
 ) : ViewModel() {
 
     private suspend fun requestTargetConversationData(targetConversation: String): Conversation {
-        val response = poloService.requestConversationSync().await()
+        val response = poloService.syncConversationData()
         return response.conversations.first { it.conversation_id == targetConversation }
     }
 
@@ -41,7 +42,7 @@ class WidgetViewModel(private val poloService: ServiceClientHelper.PoloService,
 
     fun requestConversationsListData() {
         GlobalScope.launch(dispatchers.ioDispatcher()) {
-            val response = poloService.requestConversationSync().await()
+            val response = poloService.syncConversationData()
             poloWidgetData.postValue(response.conversations)
         }
     }
@@ -91,7 +92,6 @@ class WidgetViewModel(private val poloService: ServiceClientHelper.PoloService,
 
         views.setTextViewText(R.id.appwidget_text, poloWidget.unwatchedCount)
         views.setTextViewText(R.id.widget_title, poloWidget.title)
-        Log.v("DEBUGGING MP", " Widget Title:  ${poloWidget.title}")
         views.setOnClickPendingIntent(
                 R.id.appwidget_text,
                 createHeartReplyPendingIntent(poloWidget.conversationId)

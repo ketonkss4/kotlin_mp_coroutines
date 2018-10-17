@@ -7,6 +7,6 @@ data class Member(
         val last_name: String
 ) {
     fun isMyId(): Boolean {
-        return phone.contains("6125018293")
+        return phone.contains("6125555555")
     }
 }

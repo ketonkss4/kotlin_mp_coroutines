@@ -17,7 +17,7 @@ class AuthViewModel(
         return GlobalScope.launch(dispatchers.ioDispatcher()) {
             if(!loginManager.isRegistered) {
                 loginManager.auth()
-                loginManager.login("6125018293", "US")
+                loginManager.login("6125555555", "US")
                 tokenProvider.setApiToken(loginManager.apiToken)
             }
         }

@@ -2,6 +2,7 @@ package co.happybits.mpcompanion.injection
 
 import android.content.Context
 import co.happybits.mpcompanion.MpCompanion
+import co.happybits.mpcompanion.networking.PoloService
 import co.happybits.mpcompanion.networking.ServiceClientHelper
 import dagger.Module
 import dagger.Provides
@@ -14,5 +15,5 @@ class AppModule {
 
     @Singleton
     @Provides
-    fun providePoloService(): ServiceClientHelper.PoloService = ServiceClientHelper().buildService()
+    fun providePoloService(): PoloService = ServiceClientHelper().buildService()
 }

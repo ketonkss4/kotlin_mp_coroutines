@@ -7,7 +7,7 @@ import co.happybits.mpcompanion.R
 import co.happybits.mpcompanion.concurrency.AppDispatchers
 import co.happybits.mpcompanion.concurrency.KtDispatchers
 import co.happybits.mpcompanion.data.*
-import co.happybits.mpcompanion.networking.ServiceClientHelper
+import co.happybits.mpcompanion.networking.PoloService
 import co.happybits.mpcompanion.util.SingleVideoConversationData
 import co.happybits.mpcompanion.util.buildTestConversation
 import co.happybits.mpcompanion.widget.persistence.WidgetPreferencesManager
@@ -26,7 +26,7 @@ class WidgetViewModelTest {
     @get:Rule
     val mockitoRule = MockitoJUnit.rule()
     @Mock
-    lateinit var poloService: ServiceClientHelper.PoloService
+    lateinit var poloService: PoloService
     @Mock
     lateinit var dispatchers: KtDispatchers
     @Mock
@@ -112,7 +112,7 @@ class WidgetViewModelTest {
     private fun createTestResponse(): Response {
         val testConversation = buildTestConversation(conversation_id = "100")
         val testList = arrayListOf(testConversation)
-        return Response("", "", testList)
+        return Response("", false , testList)
     }
 
 }

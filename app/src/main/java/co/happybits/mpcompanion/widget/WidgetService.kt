@@ -10,7 +10,7 @@ import android.widget.Toast
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.WIDGET_UPDATE_INTERVAL
 import co.happybits.mpcompanion.authentication.dependencies.LoginManager
-import co.happybits.mpcompanion.networking.ServiceClientHelper
+import co.happybits.mpcompanion.networking.PoloService
 import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.CONVO_ID_KEY
 import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.POLO_WIDGET_KEY
 import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.WIDGET_ID_KEY
@@ -19,7 +19,7 @@ import javax.inject.Inject
 class WidgetService : IntentService("Widget Service") {
 
     @Inject
-    lateinit var poloService: ServiceClientHelper.PoloService
+    lateinit var poloService: PoloService
 
     companion object {
         const val SERVICE_ACTION = "SERVICE_ACTION"
