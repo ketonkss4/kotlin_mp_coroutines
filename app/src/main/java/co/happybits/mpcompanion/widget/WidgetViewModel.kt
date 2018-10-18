@@ -93,7 +93,7 @@ class WidgetViewModel(private val poloService: PoloService,
         views.setTextViewText(R.id.appwidget_text, poloWidget.unwatchedCount)
         views.setTextViewText(R.id.widget_title, poloWidget.title)
         views.setOnClickPendingIntent(
-                R.id.appwidget_text,
+                R.id.widget_image,
                 createHeartReplyPendingIntent(poloWidget.conversationId)
         )
         appWidgetManager.updateAppWidget(appWidgetId, views)

@@ -34,8 +34,10 @@ class AuthViewModel(
     fun onUserTriggeredAuthentication(context: Context, number: String) {
         if (isValidCellPhone(number)) {
             authenticateLogin(number).invokeOnCompletion { throwable ->
-                if (throwable != null) Toast.makeText(context, throwable.message, Toast.LENGTH_SHORT).show()
-                else Toast.makeText(context, "Authenticated", Toast.LENGTH_SHORT).show()
+                GlobalScope.launch(dispatchers.uiDispatcher()) {
+                    if (throwable != null) Toast.makeText(context, throwable.message, Toast.LENGTH_SHORT).show()
+                    else Toast.makeText(context, "Authenticated", Toast.LENGTH_SHORT).show()
+                }
             }
         } else {
             Toast.makeText(context, "Please Enter Valid MarcoPolo Phone Number", Toast.LENGTH_SHORT).show()

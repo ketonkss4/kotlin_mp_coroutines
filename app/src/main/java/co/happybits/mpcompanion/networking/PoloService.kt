@@ -17,7 +17,7 @@ interface PoloService {
     fun sendMessage(
             @Path("conversation_id") conversationId: String,
             @Path("message_id") messageId: String,
-            @Body emotiveMessage : String
+            @Body emotiveMessage : HashMap<String, String>
     ) : Deferred<ResponseBody>
 }
 

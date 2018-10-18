@@ -14,6 +14,10 @@ import co.happybits.mpcompanion.networking.PoloService
 import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.CONVO_ID_KEY
 import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.POLO_WIDGET_KEY
 import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.WIDGET_ID_KEY
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.android.Main
+import kotlinx.coroutines.experimental.launch
 import javax.inject.Inject
 
 class WidgetService : IntentService("Widget Service") {
@@ -68,18 +72,27 @@ class WidgetService : IntentService("Widget Service") {
                         convoId,
                         LoginManager.createXID(),
                         heartEmoji()
-                )
+                ).invokeOnCompletion {
+                    GlobalScope.launch(Dispatchers.Main){
+                        if(it!=null) notifyUserOfResult(it.message)
+                        else notifyUserOfResult("Sent Hearts!")
+                    }
+                }
             }
         }
 
     }
 
-    private fun notifyUserOfResult(resultText: String) {
+    private fun notifyUserOfResult(resultText: String?) {
         Toast.makeText(applicationContext,
                 resultText,
                 Toast.LENGTH_SHORT).show()
     }
 
-    private fun heartEmoji() = "u+2764"
+    private fun heartEmoji(): HashMap<String, String>  {
+        val map = HashMap<String, String>()
+        map["text"] = "\u2764"
+        return map
+    }
 
 }
