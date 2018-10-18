@@ -23,6 +23,7 @@ import co.happybits.mpcompanion.authentication.AuthViewModel
 import co.happybits.mpcompanion.authentication.dependencies.persistence.hasSavedAuth
 import co.happybits.mpcompanion.data.Conversation
 import co.happybits.mpcompanion.data.getConversationTitle
+import co.happybits.mpcompanion.data.getImageUrl
 import co.happybits.mpcompanion.data.getUnwatchedCount
 import co.happybits.mpcompanion.widget.WidgetService.Companion.START_WIDGET_ACTION
 import co.happybits.mpcompanion.widget.dependencies.DaggerWidgetComponent
@@ -121,7 +122,9 @@ class WidgetConfigureActivity : AppCompatActivity() {
             val poloWidget = PoloWidget(
                     conversation.conversation_id,
                     conversation.getConversationTitle(),
-                    conversation.getUnwatchedCount()
+                    conversation.getUnwatchedCount(),
+                    conversation.getImageUrl(authViewModel.getAuthentication())
+
             )
             //start widget update service
             val intent = Intent(this, WidgetService::class.java)

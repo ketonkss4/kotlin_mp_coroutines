@@ -4,4 +4,5 @@ import java.io.Serializable
 
 data class PoloWidget(val conversationId: String,
                       val title: String,
-                      val unwatchedCount: String) : Serializable
+                      val unwatchedCount: String,
+                      val imgUrl: String?) : Serializable

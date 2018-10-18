@@ -5,6 +5,12 @@
     android:background="#09C"
     android:padding="@dimen/widget_margin">
 
+    <ImageView
+        android:id="@+id/widget_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"/>
+
     <TextView
         android:id="@+id/appwidget_text"
         android:layout_width="wrap_content"
@@ -12,17 +18,11 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
         android:layout_margin="4dp"
-        android:background="#09C"
         android:contentDescription="@string/appwidget_text"
         android:text="@string/appwidget_text"
         android:textColor="#ffffff"
-        android:textSize="12sp"
+        android:textSize="14sp"
         android:textStyle="bold|italic" />
-
-    <ImageView
-        android:id="@+id/widget_image"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
 
     <TextView
         android:id="@+id/widget_title"

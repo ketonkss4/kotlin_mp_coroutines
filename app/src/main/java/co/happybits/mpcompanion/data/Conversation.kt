@@ -1,5 +1,7 @@
 package co.happybits.mpcompanion.data
 
+import co.happybits.mpcompanion.networking.API_BASE_URL
+
 
 data class Conversation(val group: Boolean,
                         val title: String,
@@ -8,7 +10,8 @@ data class Conversation(val group: Boolean,
                         val modified_at: String,
                         val messages: Messages,
                         val members: List<Member>,
-                        val creator_id: String)
+                        val creator_id: String,
+                        val icon_id: String?)
 
 fun List<Member>.getMyUserId(): String? {
     forEach {
@@ -44,7 +47,12 @@ fun Conversation.getUnwatchedCount(): String {
     entries.filter { it.isVideo() }
             .filter { !it.creator.isMyId() }
             .forEach { entry ->
-        if (entry.viewers == null || !entry.viewers.viewerIds.contains(myUserId)) count++
-    }
+                if (entry.viewers == null || !entry.viewers.viewerIds.contains(myUserId)) count++
+            }
     return count.toString()
+}
+
+fun Conversation.getImageUrl(apiToken: String): String? {
+    if (icon_id == null) return null
+    return "$API_BASE_URL/images/$icon_id?api_token=$apiToken"
 }

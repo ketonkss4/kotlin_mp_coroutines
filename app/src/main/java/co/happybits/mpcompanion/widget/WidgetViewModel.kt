@@ -9,22 +9,26 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
+import co.happybits.mpcompanion.authentication.AuthViewModel
 import co.happybits.mpcompanion.concurrency.KtDispatchers
 import co.happybits.mpcompanion.data.Conversation
 import co.happybits.mpcompanion.data.getConversationTitle
+import co.happybits.mpcompanion.data.getImageUrl
 import co.happybits.mpcompanion.data.getUnwatchedCount
 import co.happybits.mpcompanion.networking.PoloService
 import co.happybits.mpcompanion.networking.syncConversationData
 import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.CONVO_ID_KEY
 import co.happybits.mpcompanion.widget.WidgetService.Companion.SERVICE_ACTION
 import co.happybits.mpcompanion.widget.persistence.WidgetPreferencesManager
+import com.squareup.picasso.Picasso
 import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.launch
 
 class WidgetViewModel(private val poloService: PoloService,
                       private val dispatchers: KtDispatchers,
                       val poloWidgetData: MutableLiveData<List<Conversation>>,
-                      private val widgetPreferencesManager: WidgetPreferencesManager
+                      private val widgetPreferencesManager: WidgetPreferencesManager,
+                      val authViewModel: AuthViewModel
 ) : ViewModel() {
 
     private suspend fun requestTargetConversationData(targetConversation: String): Conversation {
@@ -36,7 +40,8 @@ class WidgetViewModel(private val poloService: PoloService,
         val conversationData = requestTargetConversationData(targetConversation)
         return PoloWidget(conversationId = conversationData.conversation_id,
                 title = conversationData.getConversationTitle(),
-                unwatchedCount = conversationData.getUnwatchedCount()
+                unwatchedCount = conversationData.getUnwatchedCount(),
+                imgUrl = conversationData.getImageUrl(authViewModel.getAuthentication())
         )
     }
 
@@ -47,7 +52,7 @@ class WidgetViewModel(private val poloService: PoloService,
         }
     }
 
-    fun createHeartReplyPendingIntent(convoId: String) : PendingIntent {
+    fun createHeartReplyPendingIntent(convoId: String): PendingIntent {
         val context = MpCompanion.instance.applicationContext
         val intent = Intent(context, WidgetService::class.java)
         intent.action = SERVICE_ACTION
@@ -92,6 +97,10 @@ class WidgetViewModel(private val poloService: PoloService,
 
         views.setTextViewText(R.id.appwidget_text, poloWidget.unwatchedCount)
         views.setTextViewText(R.id.widget_title, poloWidget.title)
+        poloWidget.imgUrl?.let {
+            Picasso.get().load(it).into(views, R.id.widget_image, intArrayOf(appWidgetId))
+        }
+
         views.setOnClickPendingIntent(
                 R.id.widget_image,
                 createHeartReplyPendingIntent(poloWidget.conversationId)
@@ -99,11 +108,11 @@ class WidgetViewModel(private val poloService: PoloService,
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
 
-    fun startTrackingConversationId(appWidgetId: Int, convoId: String){
+    fun startTrackingConversationId(appWidgetId: Int, convoId: String) {
         widgetPreferencesManager.saveConvoIdPref(appWidgetId, convoId)
     }
 
-    fun stopTrackingConversationId(appWidgetId: Int){
+    fun stopTrackingConversationId(appWidgetId: Int) {
         widgetPreferencesManager.removeConvoIdPref(appWidgetId)
     }
 }
