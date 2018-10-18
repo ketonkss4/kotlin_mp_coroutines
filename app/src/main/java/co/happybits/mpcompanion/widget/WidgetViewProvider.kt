@@ -18,11 +18,11 @@ import javax.inject.Inject
 
 
 /**
- * Implementation of App Widget functionality.
+ * Implementation of App WidgetViewModel functionality.
  */
 class WidgetViewProvider : AppWidgetProvider() {
     @Inject
-    lateinit var widgetViewModel: WidgetViewModel
+    lateinit var widgetViewModelViewModel: WidgetViewModel
 
 
     init {
@@ -30,7 +30,7 @@ class WidgetViewProvider : AppWidgetProvider() {
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        widgetViewModel.updateWidgetData(appWidgetManager, appWidgetIds, RemoteViews(context.packageName, R.layout.widget_view_controller))
+        widgetViewModelViewModel.updateWidgetData(appWidgetManager, appWidgetIds, RemoteViews(context.packageName, R.layout.widget_view_controller))
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -41,12 +41,12 @@ class WidgetViewProvider : AppWidgetProvider() {
         ))
         when (intent.action) {
             START_WIDGET_ACTION -> {
-                Log.v("DEBUGGING MP", "Widget Start Action! Count = ${appWidgetIds.count()}")
+                Log.v("DEBUGGING MP", "WidgetViewModel Start Action! Count = ${appWidgetIds.count()}")
                 //start widget with initial data from configuration request
                 val poloWidget = intent.getSerializableExtra(POLO_WIDGET_KEY) as PoloWidget
                 val targetWidget = intent.getIntExtra(WIDGET_ID_KEY, AppWidgetManager.INVALID_APPWIDGET_ID)
                 for (id in appWidgetIds) {
-                    if (targetWidget == id) widgetViewModel.updateWidgetView(
+                    if (targetWidget == id) widgetViewModelViewModel.updateWidgetView(
                             appWidgetManager,
                             id,
                             RemoteViews(context.packageName, R.layout.widget_view_controller),
@@ -56,7 +56,7 @@ class WidgetViewProvider : AppWidgetProvider() {
             }
 
             UPDATE_WIDGET_ACTION -> {
-                Log.v("DEBUGGING MP", "Widget Service Update Action")
+                Log.v("DEBUGGING MP", "WidgetViewModel Service Update Action")
                 //update widgets on regular interval
                 onUpdate(context, appWidgetManager, appWidgetIds)
             }
@@ -70,15 +70,15 @@ class WidgetViewProvider : AppWidgetProvider() {
 
     override fun onEnabled(context: Context) {
         super.onEnabled(context)
-        Log.v("DEBUGGING MP", "Widget Enabled!")
+        Log.v("DEBUGGING MP", "WidgetViewModel Enabled!")
 
         WidgetService.startRecurringWidgetUpdateService(context)
     }
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         super.onDeleted(context, appWidgetIds)
-        Log.v("DEBUGGING MP", "Widget Deleted: ${appWidgetIds.count()}")
-        appWidgetIds.forEach { widgetViewModel.stopTrackingConversationId(it) }
+        Log.v("DEBUGGING MP", "WidgetViewModel Deleted: ${appWidgetIds.count()}")
+        appWidgetIds.forEach { widgetViewModelViewModel.stopTrackingConversationId(it) }
     }
 
     override fun onDisabled(context: Context) {

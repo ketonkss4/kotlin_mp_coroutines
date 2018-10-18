@@ -22,7 +22,7 @@ import org.mockito.Mockito.*
 import org.mockito.junit.MockitoJUnit
 
 
-class WidgetViewModelTest {
+class WidgetViewModelViewModelTest {
     @get:Rule
     val mockitoRule = MockitoJUnit.rule()
     @Mock
@@ -34,7 +34,7 @@ class WidgetViewModelTest {
     @Mock
     lateinit var widgetPreferences: WidgetPreferencesManager
     @InjectMocks
-    lateinit var widgetViewModel: WidgetViewModel
+    lateinit var widgetViewModelViewModel: WidgetViewModel
     @Captor
     private lateinit var captor: ArgumentCaptor<List<Conversation>>
 
@@ -47,7 +47,7 @@ class WidgetViewModelTest {
 
         Mockito.`when`(runBlocking { poloService.requestConversationSync() }).thenReturn(deferredMock)
 
-        widgetViewModel.requestConversationsListData()
+        widgetViewModelViewModel.requestConversationsListData()
         verify(poloWidgetData, times(1)).postValue(captor.capture())
         val conversation = captor.value.first()
         assert(conversation.conversation_id == "100")
@@ -82,7 +82,7 @@ class WidgetViewModelTest {
         Mockito.`when`(runBlocking { poloService.requestConversationSync() }).thenReturn(deferredMock)
         Mockito.`when`(dispatchers.uiDispatcher()).thenReturn(AppDispatchers().testDispatcher())
         Mockito.`when`(widgetPreferences.getConvoIdPref(targetWidgetId)).thenReturn("100")
-        widgetViewModel.updateWidgetData(appWidgetManager, testWidgetIds, remoteViews)
+        widgetViewModelViewModel.updateWidgetData(appWidgetManager, testWidgetIds, remoteViews)
 
         verify(appWidgetManager).updateAppWidget(targetWidgetId, remoteViews)
     }
@@ -103,7 +103,7 @@ class WidgetViewModelTest {
         Mockito.`when`(runBlocking { poloService.requestConversationSync() }).thenReturn(deferredMock)
         Mockito.`when`(dispatchers.uiDispatcher()).thenReturn(AppDispatchers().testDispatcher())
         Mockito.`when`(widgetPreferences.getConvoIdPref(targetWidgetId)).thenReturn(targetConversation)
-        widgetViewModel.updateWidgetData(appWidgetManager, testWidgetIds, remoteViews)
+        widgetViewModelViewModel.updateWidgetData(appWidgetManager, testWidgetIds, remoteViews)
 
         verify(remoteViews).setTextViewText(R.id.appwidget_text, "1")
         verify(appWidgetManager).updateAppWidget(targetWidgetId, remoteViews)

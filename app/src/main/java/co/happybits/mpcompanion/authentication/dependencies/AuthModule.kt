@@ -1,7 +1,7 @@
 package co.happybits.mpcompanion.authentication.dependencies
 
 import co.happybits.mpcompanion.MpCompanion
-import co.happybits.mpcompanion.authentication.AuthViewModel
+import co.happybits.mpcompanion.authentication.Auth
 import co.happybits.mpcompanion.authentication.dependencies.persistence.AuthPreferences
 import co.happybits.mpcompanion.authentication.dependencies.persistence.AuthPreferencesManager
 import co.happybits.mpcompanion.concurrency.KtDispatchers
@@ -16,8 +16,8 @@ class AuthModule {
             dispatchers: KtDispatchers,
             loginManager: LoginManager,
             authPreferencesManager: AuthPreferencesManager
-    ): AuthViewModel {
-        return AuthViewModel(
+    ): Auth {
+        return Auth(
                 loginManager,
                 dispatchers,
                 authPreferencesManager
@@ -26,7 +26,7 @@ class AuthModule {
 
     @Provides
     fun provideLoginManager(): LoginManager {
-        return LoginManager.getInstance()
+        return LoginManager.instance
     }
 
     @Provides

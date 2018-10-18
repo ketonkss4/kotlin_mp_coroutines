@@ -6,10 +6,10 @@ import android.content.Intent
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
-import co.happybits.mpcompanion.authentication.AuthViewModel
+import co.happybits.mpcompanion.authentication.Auth
+import co.happybits.mpcompanion.concurrency.CoroutineScopedViewModel
 import co.happybits.mpcompanion.concurrency.KtDispatchers
 import co.happybits.mpcompanion.data.Conversation
 import co.happybits.mpcompanion.data.getConversationTitle
@@ -21,22 +21,21 @@ import co.happybits.mpcompanion.widget.WidgetConfigureActivity.Companion.CONVO_I
 import co.happybits.mpcompanion.widget.WidgetService.Companion.SERVICE_ACTION
 import co.happybits.mpcompanion.widget.persistence.WidgetPreferencesManager
 import com.squareup.picasso.Picasso
-import kotlinx.coroutines.experimental.GlobalScope
 import kotlinx.coroutines.experimental.launch
 
 class WidgetViewModel(private val poloService: PoloService,
-                      private val dispatchers: KtDispatchers,
+                      override val dispatchers: KtDispatchers,
                       val poloWidgetData: MutableLiveData<List<Conversation>>,
                       private val widgetPreferencesManager: WidgetPreferencesManager,
-                      val authViewModel: AuthViewModel
-) : ViewModel() {
+                      private val authViewModel: Auth
+) : CoroutineScopedViewModel() {
 
     private suspend fun requestTargetConversationData(targetConversation: String): Conversation {
         val response = poloService.syncConversationData()
         return response.conversations.first { it.conversation_id == targetConversation }
     }
 
-    suspend fun syncWidgetData(targetConversation: String): PoloWidget {
+    private suspend fun syncWidgetData(targetConversation: String): PoloWidget {
         val conversationData = requestTargetConversationData(targetConversation)
         return PoloWidget(conversationId = conversationData.conversation_id,
                 title = conversationData.getConversationTitle(),
@@ -46,13 +45,13 @@ class WidgetViewModel(private val poloService: PoloService,
     }
 
     fun requestConversationsListData() {
-        GlobalScope.launch(dispatchers.ioDispatcher()) {
+        launch(dispatchers.ioDispatcher()) {
             val response = poloService.syncConversationData()
             poloWidgetData.postValue(response.conversations)
         }
     }
 
-    fun createHeartReplyPendingIntent(convoId: String): PendingIntent {
+    private fun createHeartReplyPendingIntent(convoId: String): PendingIntent {
         val context = MpCompanion.instance.applicationContext
         val intent = Intent(context, WidgetService::class.java)
         intent.action = SERVICE_ACTION
@@ -66,11 +65,11 @@ class WidgetViewModel(private val poloService: PoloService,
             remoteViews: RemoteViews
     ) {
         for (appWidgetId in appWidgetIds) {
-            GlobalScope.launch(dispatchers.uiDispatcher()) {
+            launch {
                 val convoId = widgetPreferencesManager.getConvoIdPref(appWidgetId)
                 convoId?.let {
                     val poloWidget = syncWidgetData(it)
-                    Log.v("DEBUGGING MP", "Update Widget From Saved Prefs ConvoID = $it " +
+                    Log.v("DEBUGGING MP", "Update WidgetViewModel From Saved Prefs ConvoID = $it " +
                             "Response: Title = ${poloWidget.title}, Unwatch Count = ${poloWidget.unwatchedCount}")
 
                     updateWidgetView(
@@ -91,7 +90,7 @@ class WidgetViewModel(private val poloService: PoloService,
             views: RemoteViews,
             poloWidget: PoloWidget
     ) {
-        Log.v("DEBUGGING MP", "Update Widget View.  Title = ${poloWidget.title}," +
+        Log.v("DEBUGGING MP", "Update WidgetViewModel View.  Title = ${poloWidget.title}," +
                 " Unwatch Count = ${poloWidget.unwatchedCount}" +
                 " ID = ${poloWidget.conversationId}")
 

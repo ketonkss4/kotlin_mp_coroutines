@@ -1,6 +1,6 @@
 package co.happybits.mpcompanion.networking
 
-import co.happybits.mpcompanion.authentication.AuthViewModel
+import co.happybits.mpcompanion.authentication.Auth
 import co.happybits.mpcompanion.authentication.dependencies.DaggerAuthComponent
 import co.happybits.mpcompanion.data.Viewers
 import co.happybits.mpcompanion.data.ViewersDeserializer
@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 class ServiceClientHelper {
     @Inject
-    lateinit var authViewModel: AuthViewModel
+    lateinit var authViewModel: Auth
 
     init {
         DaggerAuthComponent.builder().build().inject(this)

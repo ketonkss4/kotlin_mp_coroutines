@@ -11,7 +11,6 @@ import android.view.View.VISIBLE
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -19,26 +18,30 @@ import butterknife.BindView
 import butterknife.ButterKnife
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
-import co.happybits.mpcompanion.authentication.AuthViewModel
+import co.happybits.mpcompanion.authentication.Auth
 import co.happybits.mpcompanion.authentication.dependencies.persistence.hasSavedAuth
+import co.happybits.mpcompanion.concurrency.CoroutineScopedActivity
 import co.happybits.mpcompanion.data.Conversation
 import co.happybits.mpcompanion.data.getConversationTitle
 import co.happybits.mpcompanion.data.getImageUrl
 import co.happybits.mpcompanion.data.getUnwatchedCount
 import co.happybits.mpcompanion.widget.WidgetService.Companion.START_WIDGET_ACTION
 import co.happybits.mpcompanion.widget.dependencies.DaggerWidgetComponent
+import kotlinx.coroutines.experimental.launch
 import javax.inject.Inject
 
 /**
  * The configuration screen for the [WidgetViewProvider] AppWidget.
  */
-class WidgetConfigureActivity : AppCompatActivity() {
+class WidgetConfigureActivity : CoroutineScopedActivity() {
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     @BindView(R.id.conversations_list_view)
     lateinit var conversationsListView: RecyclerView
     @BindView(R.id.progress_bar)
     lateinit var progressIndicator: ProgressBar
+    @BindView(R.id.auth_progress_bar)
+    lateinit var authBtnProgressIndicator: ProgressBar
     @BindView(R.id.editText)
     lateinit var phoneNumberInput: EditText
     @BindView(R.id.button)
@@ -48,9 +51,9 @@ class WidgetConfigureActivity : AppCompatActivity() {
     @BindView(R.id.widget_selection_view)
     lateinit var widgetSelectionView: View
     @Inject
-    lateinit var widgetViewModel: WidgetViewModel
+    lateinit var widgetViewModelViewModel: WidgetViewModel
     @Inject
-    lateinit var authViewModel: AuthViewModel
+    lateinit var authViewModel: Auth
     private lateinit var adapter: ConversationsListAdapter
 
     companion object {
@@ -74,7 +77,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
         adapter = ConversationsListAdapter()
         conversationsListView.layoutManager = LinearLayoutManager(this)
         conversationsListView.adapter = adapter
-        widgetViewModel.poloWidgetData.observe(this, Observer {
+        widgetViewModelViewModel.poloWidgetData.observe(this, Observer {
             adapter.refreshList(it)
             progressIndicator.visibility = GONE
         })
@@ -84,7 +87,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
         if (!authViewModel.authPrefs.hasSavedAuth()) {
             displayUserAuthetication()
         } else {
-            widgetViewModel.requestConversationsListData()
+            widgetViewModelViewModel.requestConversationsListData()
         }
     }
 
@@ -98,24 +101,36 @@ class WidgetConfigureActivity : AppCompatActivity() {
         }
         authenticateButton.setOnClickListener {
             val number = phoneNumberInput.text.toString()
+            it.visibility = GONE
+            authBtnProgressIndicator.visibility = VISIBLE
             authViewModel.onWidgetTriggeredAuthentication(
                     this,
-                    number
-            ) { displayWidgetSelectionView() }
+                    number,
+                    {displayWidgetSelectionView()},
+                    {onAuthorizationError()}
+            )
+        }
+    }
+
+    private fun onAuthorizationError() {
+        launch {
+            authenticateButton.visibility = VISIBLE
+            authBtnProgressIndicator.visibility = GONE
         }
     }
 
     private fun displayWidgetSelectionView() {
-        authenticationView.visibility = GONE
-        widgetSelectionView.visibility = VISIBLE
-
-        widgetViewModel.requestConversationsListData()
+        launch {
+            authenticationView.visibility = GONE
+            widgetSelectionView.visibility = VISIBLE
+            widgetViewModelViewModel.requestConversationsListData()
+        }
     }
 
     private fun onConvoSelected(): Observer<Conversation> {
         return Observer { conversation ->
             //save convo id to update widget periodically later
-            widgetViewModel.startTrackingConversationId(
+            widgetViewModelViewModel.startTrackingConversationId(
                     appWidgetId,
                     conversation.conversation_id
             )
@@ -132,6 +147,8 @@ class WidgetConfigureActivity : AppCompatActivity() {
             intent.putExtra(POLO_WIDGET_KEY, poloWidget)
             intent.putExtra(WIDGET_ID_KEY, appWidgetId)
             startService(intent)
+
+
             completeConfiguration()
         }
     }

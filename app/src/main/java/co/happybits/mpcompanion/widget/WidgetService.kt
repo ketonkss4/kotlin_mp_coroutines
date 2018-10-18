@@ -20,7 +20,7 @@ import kotlinx.coroutines.experimental.android.Main
 import kotlinx.coroutines.experimental.launch
 import javax.inject.Inject
 
-class WidgetService : IntentService("Widget Service") {
+class WidgetService : IntentService("WidgetViewModel Service") {
 
     @Inject
     lateinit var poloService: PoloService
