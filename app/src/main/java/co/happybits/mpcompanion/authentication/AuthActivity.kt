@@ -2,11 +2,13 @@ package co.happybits.mpcompanion.authentication
 
 import android.os.Bundle
 import android.telephony.PhoneNumberFormattingTextWatcher
+import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
+import android.widget.Toast
 import butterknife.BindString
 import butterknife.BindView
 import butterknife.ButterKnife
@@ -20,7 +22,7 @@ import javax.inject.Inject
 class AuthActivity : CoroutineScopedActivity() {
 
     @Inject
-    lateinit var authViewModel: Auth
+    lateinit var authViewModel: AuthViewModel
     @BindView(R.id.editText)
     lateinit var phoneNumberInput: EditText
     @BindView(R.id.button)
@@ -36,22 +38,40 @@ class AuthActivity : CoroutineScopedActivity() {
         ButterKnife.bind(this)
         DaggerAuthComponent.builder().build().inject(this)
         phoneNumberInput.addTextChangedListener(PhoneNumberFormattingTextWatcher())
+        authenticateButton.setOnClickListener(onAuthButtonClick())
+    }
 
-        authenticateButton.setOnClickListener { button ->
+    private fun onAuthButtonClick(): View.OnClickListener {
+        return View.OnClickListener { button ->
             val number = phoneNumberInput.text.toString()
             button.visibility = GONE
             progressIndicator.visibility = VISIBLE
-            authViewModel.onUserTriggeredAuthentication(this, number) {
+            requestAuth(number)
+        }
+    }
+
+    private fun requestAuth(number: String) {
+        launch {
+            val result = authViewModel.authenticate(number).await()
+            if (result.isSuccessful) {
                 onAuthorizationComplete()
+            } else {
+                onAuthFailed(result.failMsg)
             }
         }
+    }
+
+    private fun onAuthFailed(failMsg: String?) {
+        onAuthorizationComplete()
+        failMsg?.let { Toast.makeText(this, it, Toast.LENGTH_SHORT).show() }
     }
 
     private fun onAuthorizationComplete() {
         launch {
             authenticateButton.visibility = VISIBLE
             progressIndicator.visibility = GONE
-            authenticateButton.text = reauthText
+            if(authViewModel.authPrefs.hasSavedAuth()) { authenticateButton.text = reauthText }
+            Toast.makeText(this@AuthActivity, "Authorized", Toast.LENGTH_SHORT).show()
         }
     }
 

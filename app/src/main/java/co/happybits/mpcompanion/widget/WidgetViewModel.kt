@@ -8,7 +8,7 @@ import android.widget.RemoteViews
 import androidx.lifecycle.MutableLiveData
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
-import co.happybits.mpcompanion.authentication.Auth
+import co.happybits.mpcompanion.authentication.AuthViewModel
 import co.happybits.mpcompanion.concurrency.CoroutineScopedViewModel
 import co.happybits.mpcompanion.concurrency.KtDispatchers
 import co.happybits.mpcompanion.data.Conversation
@@ -27,7 +27,7 @@ class WidgetViewModel(private val poloService: PoloService,
                       override val dispatchers: KtDispatchers,
                       val poloWidgetData: MutableLiveData<List<Conversation>>,
                       private val widgetPreferencesManager: WidgetPreferencesManager,
-                      private val authViewModel: Auth,
+                      private val authViewModelViewModel: AuthViewModel,
                       private val picasso: Picasso
 ) : CoroutineScopedViewModel() {
 
@@ -41,7 +41,7 @@ class WidgetViewModel(private val poloService: PoloService,
         return PoloWidget(conversationId = conversationData.conversation_id,
                 title = conversationData.getConversationTitle(),
                 unwatchedCount = conversationData.getUnwatchedCount(),
-                imgUrl = conversationData.getImageUrl(authViewModel.getAuthentication())
+                imgUrl = conversationData.getImageUrl(authViewModelViewModel.getAuthentication())
         )
     }
 

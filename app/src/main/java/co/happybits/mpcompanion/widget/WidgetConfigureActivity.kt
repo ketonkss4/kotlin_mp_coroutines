@@ -11,14 +11,16 @@ import android.view.View.VISIBLE
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import butterknife.BindString
 import butterknife.BindView
 import butterknife.ButterKnife
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
-import co.happybits.mpcompanion.authentication.Auth
+import co.happybits.mpcompanion.authentication.AuthViewModel
 import co.happybits.mpcompanion.authentication.dependencies.persistence.hasSavedAuth
 import co.happybits.mpcompanion.concurrency.CoroutineScopedActivity
 import co.happybits.mpcompanion.data.Conversation
@@ -50,10 +52,12 @@ class WidgetConfigureActivity : CoroutineScopedActivity() {
     lateinit var authenticationView: View
     @BindView(R.id.widget_selection_view)
     lateinit var widgetSelectionView: View
+    @BindString(R.string.reauthenticate_btn_txt)
+    lateinit var reauthText: String
     @Inject
     lateinit var widgetViewModelViewModel: WidgetViewModel
     @Inject
-    lateinit var authViewModel: Auth
+    lateinit var authViewModel: AuthViewModel
     private lateinit var adapter: ConversationsListAdapter
 
     companion object {
@@ -85,46 +89,53 @@ class WidgetConfigureActivity : CoroutineScopedActivity() {
         authenticationView.visibility = GONE
 
         if (!authViewModel.authPrefs.hasSavedAuth()) {
-            displayUserAuthetication()
+            displayUserAuthentication()
         } else {
             widgetViewModelViewModel.requestConversationsListData()
         }
     }
 
-    private fun displayUserAuthetication() {
+    private fun displayUserAuthentication() {
         authenticationView.visibility = VISIBLE
         widgetSelectionView.visibility = GONE
         phoneNumberInput.addTextChangedListener(PhoneNumberFormattingTextWatcher())
         if (authViewModel.authPrefs.hasSavedAuth()) {
             phoneNumberInput.setText(authViewModel.authPrefs.getPhoneAuthPref())
-            authenticateButton.text = "Re-Autheticate"
+            authenticateButton.text = reauthText
         }
-        authenticateButton.setOnClickListener {
+        authenticateButton.setOnClickListener(onAuthenticationClick())
+    }
+
+    private fun onAuthenticationClick(): View.OnClickListener {
+        return View.OnClickListener {
             val number = phoneNumberInput.text.toString()
             it.visibility = GONE
             authBtnProgressIndicator.visibility = VISIBLE
-            authViewModel.onWidgetTriggeredAuthentication(
-                    this,
-                    number,
-                    {displayWidgetSelectionView()},
-                    {onAuthorizationError()}
-            )
+            requestAuthentication(number)
         }
     }
 
-    private fun onAuthorizationError() {
+    private fun requestAuthentication(number: String) {
         launch {
-            authenticateButton.visibility = VISIBLE
-            authBtnProgressIndicator.visibility = GONE
+            val auth = authViewModel.authenticate(number).await()
+            if (auth.isSuccessful) {
+                displayWidgetSelectionView()
+            } else {
+                onAuthorizationError(auth.failMsg)
+            }
         }
+    }
+
+    private fun onAuthorizationError(failMsg: String?) {
+        authenticateButton.visibility = VISIBLE
+        authBtnProgressIndicator.visibility = GONE
+        failMsg.let { Toast.makeText(this, it, Toast.LENGTH_SHORT).show() }
     }
 
     private fun displayWidgetSelectionView() {
-        launch {
-            authenticationView.visibility = GONE
-            widgetSelectionView.visibility = VISIBLE
-            widgetViewModelViewModel.requestConversationsListData()
-        }
+        authenticationView.visibility = GONE
+        widgetSelectionView.visibility = VISIBLE
+        widgetViewModelViewModel.requestConversationsListData()
     }
 
     private fun onConvoSelected(): Observer<Conversation> {
@@ -184,4 +195,6 @@ class WidgetConfigureActivity : CoroutineScopedActivity() {
                 .inject(this)
     }
 }
+
+
 

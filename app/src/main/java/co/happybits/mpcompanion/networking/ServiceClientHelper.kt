@@ -1,6 +1,6 @@
 package co.happybits.mpcompanion.networking
 
-import co.happybits.mpcompanion.authentication.Auth
+import co.happybits.mpcompanion.authentication.AuthViewModel
 import co.happybits.mpcompanion.authentication.dependencies.DaggerAuthComponent
 import co.happybits.mpcompanion.data.Viewers
 import co.happybits.mpcompanion.data.ViewersDeserializer
@@ -16,7 +16,7 @@ import javax.inject.Inject
 
 class ServiceClientHelper {
     @Inject
-    lateinit var authViewModel: Auth
+    lateinit var authViewModelViewModel: AuthViewModel
 
     init {
         DaggerAuthComponent.builder().build().inject(this)
@@ -28,11 +28,11 @@ class ServiceClientHelper {
         val httpClientBuilder = OkHttpClient.Builder()
         httpClientBuilder.addInterceptor(loggingInterceptor)
         httpClientBuilder.addInterceptor {
-            val request = buildAuthorizedRequest(it.request(), authViewModel.getAuthentication())
+            val request = buildAuthorizedRequest(it.request(), authViewModelViewModel.getAuthentication())
             val response = it.proceed(request)
             if (response.code() == 401) {
-                runBlocking { authViewModel.reAuthenticate() }
-                val reAuthRequest = buildAuthorizedRequest(request, authViewModel.getAuthentication())
+                runBlocking { authViewModelViewModel.reAuthenticate() }
+                val reAuthRequest = buildAuthorizedRequest(request, authViewModelViewModel.getAuthentication())
                 it.proceed(reAuthRequest)
             } else {
                 response
@@ -45,7 +45,7 @@ class ServiceClientHelper {
     fun buildAuthorizedRequest(request: Request, authToken: String): Request {
         return request.newBuilder().addHeader(
                 "Authorization",
-                authViewModel.getAuthentication()
+                authViewModelViewModel.getAuthentication()
         ).build()
     }
 

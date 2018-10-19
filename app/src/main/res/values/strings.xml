@@ -4,6 +4,6 @@
     <string name="add_widget">Add widget</string>
     <string name="configure_instrustions_text">Select conversation to track</string>
     <string name="convo_item_label">Conversation</string>
-    <string name="reauthenticate_btn_txt">Re-Autheticate</string>
+    <string name="reauthenticate_btn_txt">Re-Authenticate</string>
     <string name="authenticate_btn_txt">Authenticate</string>
 </resources>

@@ -23,6 +23,7 @@ class MpCompanion : Application() {
 
         appComponent.inject(this)
         instance = this
+        System.setProperty("kotlinx.coroutines.debug", if (BuildConfig.DEBUG) "on" else "off")
     }
 
     fun isMyServiceRunning(serviceClass: Class<*>): Boolean {

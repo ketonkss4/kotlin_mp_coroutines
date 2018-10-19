@@ -2,7 +2,7 @@ package co.happybits.mpcompanion.widget.dependencies
 
 import android.content.Context
 import androidx.lifecycle.MutableLiveData
-import co.happybits.mpcompanion.authentication.Auth
+import co.happybits.mpcompanion.authentication.AuthViewModel
 import co.happybits.mpcompanion.concurrency.KtDispatchers
 import co.happybits.mpcompanion.networking.PoloService
 import co.happybits.mpcompanion.widget.WidgetViewModel
@@ -19,14 +19,14 @@ open class WidgetModule {
             poloService: PoloService,
             dispatchers: KtDispatchers,
             widgetPreferencesManager: WidgetPreferencesManager,
-            authViewModel: Auth
+            authViewModelViewModel: AuthViewModel
     ): WidgetViewModel {
         return WidgetViewModel(
                 poloService,
                 dispatchers,
                 MutableLiveData(),
                 widgetPreferencesManager,
-                authViewModel,
+                authViewModelViewModel,
                 Picasso.get()
         )
     }

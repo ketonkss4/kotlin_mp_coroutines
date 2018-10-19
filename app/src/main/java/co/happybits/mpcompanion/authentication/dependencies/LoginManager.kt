@@ -8,8 +8,6 @@ import co.happybits.mpcompanion.networking.API_BASE_URL
 import co.happybits.mpcompanion.networking.PlatformHttpConnection
 import kotlinx.coroutines.experimental.CompletableDeferred
 import kotlinx.coroutines.experimental.Deferred
-import okhttp3.Response
-import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -21,15 +19,9 @@ class LoginManager private constructor() {
     private val _deviceID: String?
     private val _secret: String?
 
-    @get:Synchronized
-    var isRegistered: Boolean = false
-        private set
-
-    @get:Synchronized
-    var apiToken: String? = null
-        private set
-
-    private object Holder { val INSTANCE = LoginManager() }
+    private object Holder {
+        val INSTANCE = LoginManager()
+    }
 
     companion object {
         val instance: LoginManager by lazy { Holder.INSTANCE }
@@ -53,31 +45,11 @@ class LoginManager private constructor() {
         val prefs = context.getSharedPreferences(context.packageName, Context.MODE_PRIVATE)
         _deviceID = prefs.getString("DeviceID", createXID())
         _secret = prefs.getString("AuthSecret", createXID())
-        isRegistered = prefs.getBoolean("IsRegistered", false)
-    }
-
-    fun login(phone: String, countryCode: String): Deferred<Boolean> {
-        val deferred = CompletableDeferred<Boolean>()
-        // phone: the local phone number including area code (e.g. 2065551234)
-        // countryCode: the two letter country identifier (e.g. "US")
-
-        if (isRegistered) {
-            deferred.complete(isRegistered)
-        }
-
-        try {
-            val code = getAutoVerifyPhoneCode(phone, countryCode, deferred)
-            verifyCode(phone, countryCode, code, deferred)
-        } catch (ex: IOException) {
-            deferred.cancel(ex)
-        }
-
-        return deferred
     }
 
     @Throws(IOException::class)
-    fun auth(): Deferred<Response> {
-        val deferred = CompletableDeferred<Response>()
+    fun auth(): Deferred<String> {
+        val deferred = CompletableDeferred<String>()
         try {
             val authParams = JSONObject()
                     .put("device_id", _deviceID)
@@ -93,22 +65,47 @@ class LoginManager private constructor() {
                     .put("locale", "en_US")
                     .put("timezone", "PST")
 
-            val connection = PlatformHttpConnection("$API_BASE_URL/auth")
+            val connection = PlatformHttpConnection("${API_BASE_URL}auth")
             val headers = HashMap<String, String>()
             headers["Content-Type"] = "application/json"
             val requestCall = connection.getRequest(PlatformHttpConnection.POST, headers, authParams)
             deferred.invokeOnCompletion { requestCall.cancel() }
 
             val response = requestCall.execute()
-            if(!response.isSuccessful){
+            if (!response.isSuccessful) {
                 deferred.cancel(CancellationException("Authorization Failed : ${response.code()}"))
-            }else {
+            } else {
                 val responseJSON = JSONObject(response.body()?.bytes()?.let { String(it) })
-                parseAuthResponse(responseJSON)
-                deferred.complete(response)
+                deferred.complete(responseJSON.getString("api_token"))
             }
         } catch (ex: Exception) {
             deferred.cancel(CancellationException(ex.message))
+        }
+        return deferred
+    }
+
+    fun login(phone: String, countryCode: String, authToken: String): Deferred<String> {
+        val deferred = CompletableDeferred<String>()
+        // phone: the local phone number including area code (e.g. 2065551234)
+        // countryCode: the two letter country identifier (e.g. "US")
+        try {
+            val code = getAutoVerifyPhoneCode(
+                    phone,
+                    countryCode,
+                    authToken,
+                    deferred
+            )
+            code?.let {
+                verifyCode(
+                        phone,
+                        countryCode,
+                        code,
+                        authToken,
+                        deferred
+                )
+            }
+        } catch (ex: IOException) {
+            deferred.cancel(ex)
         }
         return deferred
     }
@@ -117,7 +114,8 @@ class LoginManager private constructor() {
     private fun getAutoVerifyPhoneCode(
             phone: String,
             countryCode: String,
-            deferred: CompletableDeferred<Boolean>
+            authToken: String,
+            deferred: CompletableDeferred<String>
     ): String? {
 
         try {
@@ -127,12 +125,15 @@ class LoginManager private constructor() {
 
             val responseJSON = doAuthenticatedRequest(
                     PlatformHttpConnection.POST,
-                    "/admin/user/phone_code",
+                    "admin/user/phone_code",
                     params,
+                    authToken,
                     deferred
             )
-            return responseJSON.getString("code")
 
+            if (responseJSON.has("code")) {
+                return responseJSON.getString("code")
+            }
         } catch (ex: Exception) {
             deferred.cancel(CancellationException(ex.message))
         }
@@ -145,7 +146,8 @@ class LoginManager private constructor() {
             phone: String,
             countryCode: String,
             code: String?,
-            deferred: CompletableDeferred<Boolean>
+            authToken: String,
+            deferred: CompletableDeferred<String>
     ) {
         try {
             val params = JSONObject()
@@ -155,14 +157,16 @@ class LoginManager private constructor() {
 
             val responseJSON = doAuthenticatedRequest(
                     PlatformHttpConnection.POST,
-                    "/auth/verify-phone-code",
+                    "auth/verify-phone-code",
                     params,
+                    authToken,
                     deferred
             )
-            parseAuthResponse(responseJSON)
-            deferred.complete(isRegistered)
+            if(responseJSON.has("api_token")) {
+                deferred.complete(responseJSON.getString("api_token"))
+            }
         } catch (ex: Exception) {
-            deferred.cancel(CancellationException(ex.message))
+            deferred.cancel(CancellationException("Phone Verification Failed: ${ex.message}"))
         }
     }
 
@@ -171,36 +175,33 @@ class LoginManager private constructor() {
             method: String,
             path: String,
             params: JSONObject,
-            deferred: Deferred<Boolean>
+            authToken: String,
+            deferred: Deferred<String>
     ): JSONObject {
-
-        try {
+        return try {
             val connection = PlatformHttpConnection(API_BASE_URL + path)
             val headers = HashMap<String, String>()
             headers["Content-Type"] = "application/json"
-            headers["Authorization"] = "Bearer $apiToken"
-            var requestCall = connection.getRequest(method, headers, params)
+            headers["Authorization"] = "Bearer $authToken"
+            val requestCall = connection.getRequest(method, headers, params)
             deferred.invokeOnCompletion { requestCall.cancel() }
             val response = requestCall.execute()
-            if (!response.isSuccessful) {
-                deferred.cancel(CancellationException("Login Failed : ${response.code()}"))
+            val jsonObject = JSONObject(response.body()?.bytes()?.let { String(it) })
+            if(jsonObject.has("error")) {
+                val errorMsg = jsonObject.getJSONObject("error").getString("message")
+                deferred.cancel(CancellationException("Verification Failed : $errorMsg"))
             }
-            return JSONObject(response.body()?.bytes()?.let { String(it) })
-
+            jsonObject
         } catch (ex: Exception) {
-            return JSONObject()
+            JSONObject()
         }
-
-    }
-
-    @Synchronized
-    private fun parseAuthResponse(responseJSON: JSONObject) {
-        try {
-            apiToken = responseJSON.getString("api_token")
-            isRegistered = responseJSON.getBoolean("is_registered")
-        } catch (ex: JSONException) {
-            // empty
-        }
-
     }
 }
+
+suspend fun <T> Deferred<T>.awaitAuthResult(): AuthResult<T> = try {
+    AuthResult(true, await(), null)
+} catch (e: Exception) {
+    AuthResult(false, null, e)
+}
+
+data class AuthResult<out T>(val isSuccessful: Boolean, val result: T?, val exception: Exception?)
