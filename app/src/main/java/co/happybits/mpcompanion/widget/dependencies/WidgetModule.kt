@@ -1,13 +1,14 @@
 package co.happybits.mpcompanion.widget.dependencies
 
+import android.content.Context
 import androidx.lifecycle.MutableLiveData
-import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.authentication.Auth
 import co.happybits.mpcompanion.concurrency.KtDispatchers
 import co.happybits.mpcompanion.networking.PoloService
 import co.happybits.mpcompanion.widget.WidgetViewModel
 import co.happybits.mpcompanion.widget.persistence.WidgetPreferences
 import co.happybits.mpcompanion.widget.persistence.WidgetPreferencesManager
+import com.squareup.picasso.Picasso
 import dagger.Module
 import dagger.Provides
 
@@ -25,12 +26,13 @@ open class WidgetModule {
                 dispatchers,
                 MutableLiveData(),
                 widgetPreferencesManager,
-                authViewModel
+                authViewModel,
+                Picasso.get()
         )
     }
 
     @Provides
-    fun provideWidgetPreferencesManager(): WidgetPreferencesManager {
-        return WidgetPreferences(MpCompanion.instance)
+    fun provideWidgetPreferencesManager(context: Context): WidgetPreferencesManager {
+        return WidgetPreferences(context)
     }
 }

@@ -1,5 +1,6 @@
 package co.happybits.mpcompanion.injection
 
+import android.content.Context
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.concurrency.KtDispatchers
 import co.happybits.mpcompanion.networking.PoloService
@@ -19,6 +20,7 @@ interface AppComponent {
         fun build(): AppComponent
     }
 
+    fun applicationContext(): Context
     fun service(): PoloService
     fun dispatchers(): KtDispatchers
     fun inject(app: MpCompanion)

@@ -27,7 +27,8 @@ class WidgetViewModel(private val poloService: PoloService,
                       override val dispatchers: KtDispatchers,
                       val poloWidgetData: MutableLiveData<List<Conversation>>,
                       private val widgetPreferencesManager: WidgetPreferencesManager,
-                      private val authViewModel: Auth
+                      private val authViewModel: Auth,
+                      private val picasso: Picasso
 ) : CoroutineScopedViewModel() {
 
     private suspend fun requestTargetConversationData(targetConversation: String): Conversation {
@@ -96,9 +97,12 @@ class WidgetViewModel(private val poloService: PoloService,
 
         views.setTextViewText(R.id.appwidget_text, poloWidget.unwatchedCount)
         views.setTextViewText(R.id.widget_title, poloWidget.title)
-        poloWidget.imgUrl?.let {
-            Picasso.get().load(it).into(views, R.id.widget_image, intArrayOf(appWidgetId))
+        if (poloWidget.hasImage()) {
+            picasso.load(poloWidget.imgUrl).into(views, R.id.widget_image, intArrayOf(appWidgetId))
+        } else {
+            views.setImageViewResource(R.id.widget_image, R.color.colorPrimary)
         }
+
 
         views.setOnClickPendingIntent(
                 R.id.widget_image,
@@ -114,4 +118,8 @@ class WidgetViewModel(private val poloService: PoloService,
     fun stopTrackingConversationId(appWidgetId: Int) {
         widgetPreferencesManager.removeConvoIdPref(appWidgetId)
     }
+}
+
+private fun PoloWidget.hasImage(): Boolean {
+    return !imgUrl.isNullOrBlank()
 }

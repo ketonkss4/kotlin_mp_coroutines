@@ -30,7 +30,7 @@ class WidgetViewProvider : AppWidgetProvider() {
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        widgetViewModelViewModel.updateWidgetData(appWidgetManager, appWidgetIds, RemoteViews(context.packageName, R.layout.widget_view_controller))
+        widgetViewModelViewModel.updateWidgetData(appWidgetManager, appWidgetIds, RemoteViews(context.packageName, R.layout.widget_view))
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -49,7 +49,7 @@ class WidgetViewProvider : AppWidgetProvider() {
                     if (targetWidget == id) widgetViewModelViewModel.updateWidgetView(
                             appWidgetManager,
                             id,
-                            RemoteViews(context.packageName, R.layout.widget_view_controller),
+                            RemoteViews(context.packageName, R.layout.widget_view),
                             poloWidget
                     )
                 }
