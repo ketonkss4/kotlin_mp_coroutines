@@ -22,7 +22,7 @@ import javax.inject.Inject
  */
 class WidgetViewProvider : AppWidgetProvider() {
     @Inject
-    lateinit var widgetViewModelViewModel: WidgetViewModel
+    lateinit var widgetViewModel: WidgetViewModel
 
 
     init {
@@ -30,7 +30,11 @@ class WidgetViewProvider : AppWidgetProvider() {
     }
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        widgetViewModelViewModel.updateWidgetData(appWidgetManager, appWidgetIds, RemoteViews(context.packageName, R.layout.widget_view))
+        widgetViewModel.updateWidgetData(
+                appWidgetManager,
+                appWidgetIds,
+                RemoteViews(context.packageName, R.layout.widget_view)
+        )
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -44,9 +48,12 @@ class WidgetViewProvider : AppWidgetProvider() {
                 Log.v("DEBUGGING MP", "WidgetViewModel Start Action! Count = ${appWidgetIds.count()}")
                 //start widget with initial data from configuration request
                 val poloWidget = intent.getSerializableExtra(POLO_WIDGET_KEY) as PoloWidget
-                val targetWidget = intent.getIntExtra(WIDGET_ID_KEY, AppWidgetManager.INVALID_APPWIDGET_ID)
+                val targetWidget = intent.getIntExtra(
+                        WIDGET_ID_KEY,
+                        AppWidgetManager.INVALID_APPWIDGET_ID
+                )
                 for (id in appWidgetIds) {
-                    if (targetWidget == id) widgetViewModelViewModel.updateWidgetView(
+                    if (targetWidget == id) widgetViewModel.updateWidgetView(
                             appWidgetManager,
                             id,
                             RemoteViews(context.packageName, R.layout.widget_view),
@@ -61,6 +68,18 @@ class WidgetViewProvider : AppWidgetProvider() {
                 onUpdate(context, appWidgetManager, appWidgetIds)
             }
 
+            AppWidgetManager.ACTION_APPWIDGET_UPDATE -> {
+                for (id in appWidgetIds) {
+                    val isDefaultView = widgetViewModel.setDefaultWidgetView(
+                            appWidgetManager,
+                            id,
+                            RemoteViews(context.packageName, R.layout.widget_setup_view)
+                    )
+                    if (!isDefaultView) {
+                        onUpdate(context, appWidgetManager, appWidgetIds)
+                    }
+                }
+            }
             //due to overriding onReceive must handle widget intents manually
             AppWidgetManager.ACTION_APPWIDGET_ENABLED,
             AppWidgetManager.ACTION_APPWIDGET_DISABLED,
@@ -78,7 +97,7 @@ class WidgetViewProvider : AppWidgetProvider() {
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
         super.onDeleted(context, appWidgetIds)
         Log.v("DEBUGGING MP", "WidgetViewModel Deleted: ${appWidgetIds.count()}")
-        appWidgetIds.forEach { widgetViewModelViewModel.stopTrackingConversationId(it) }
+        appWidgetIds.forEach { widgetViewModel.stopTrackingConversationId(it) }
     }
 
     override fun onDisabled(context: Context) {

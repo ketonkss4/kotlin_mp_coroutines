@@ -34,8 +34,9 @@ import javax.inject.Inject
 
 /**
  * The configuration screen for the [WidgetViewProvider] AppWidget.
+ * when widget is created from system widget selection view
  */
-class WidgetConfigureActivity : CoroutineScopedActivity() {
+open class WidgetConfigureActivity : CoroutineScopedActivity() {
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     @BindView(R.id.conversations_list_view)
@@ -165,7 +166,7 @@ class WidgetConfigureActivity : CoroutineScopedActivity() {
     }
 
 
-    private fun completeConfiguration() {
+    open fun completeConfiguration() {
         val resultValue = Intent()
         resultValue.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
         setResult(Activity.RESULT_OK, resultValue)

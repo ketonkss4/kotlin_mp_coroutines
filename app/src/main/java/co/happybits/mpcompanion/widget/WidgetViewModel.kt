@@ -60,14 +60,21 @@ class WidgetViewModel(private val poloService: PoloService,
         return PendingIntent.getService(context, 0, intent, 0)
     }
 
+    private fun createWidgetSetupPendingIntent(widgetId: Int): PendingIntent {
+        val context = MpCompanion.instance.applicationContext
+        val intent = Intent(context, WidgetConfigureActivity::class.java)
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
+        return PendingIntent.getActivity(context, 0, intent, 0)
+    }
+
     fun updateWidgetData(
             appWidgetManager: AppWidgetManager,
             appWidgetIds: IntArray,
             remoteViews: RemoteViews
     ) {
         for (appWidgetId in appWidgetIds) {
+            val convoId = widgetPreferencesManager.getConvoIdPref(appWidgetId)
             launch {
-                val convoId = widgetPreferencesManager.getConvoIdPref(appWidgetId)
                 convoId?.let {
                     val poloWidget = syncWidgetData(it)
                     Log.v("DEBUGGING MP", "Update WidgetViewModel From Saved Prefs ConvoID = $it " +
@@ -117,6 +124,23 @@ class WidgetViewModel(private val poloService: PoloService,
 
     fun stopTrackingConversationId(appWidgetId: Int) {
         widgetPreferencesManager.removeConvoIdPref(appWidgetId)
+    }
+
+    fun setDefaultWidgetView(
+            appWidgetManager: AppWidgetManager,
+            appWidgetId: Int,
+            views: RemoteViews): Boolean {
+        val convoId = widgetPreferencesManager.getConvoIdPref(appWidgetId)
+        return if (convoId == null) {
+            views.setOnClickPendingIntent(
+                    R.id.widget_click_to_add,
+                    createWidgetSetupPendingIntent(appWidgetId)
+            )
+            appWidgetManager.updateAppWidget(appWidgetId, views)
+            true
+        } else {
+            false
+        }
     }
 }
 

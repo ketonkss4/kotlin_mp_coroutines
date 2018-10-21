@@ -1,5 +1,9 @@
 package co.happybits.mpcompanion.authentication
 
+import android.annotation.TargetApi
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.os.Build
 import android.os.Bundle
 import android.telephony.PhoneNumberFormattingTextWatcher
 import android.view.View
@@ -16,6 +20,7 @@ import co.happybits.mpcompanion.R
 import co.happybits.mpcompanion.authentication.dependencies.DaggerAuthComponent
 import co.happybits.mpcompanion.authentication.dependencies.persistence.hasSavedAuth
 import co.happybits.mpcompanion.concurrency.CoroutineScopedActivity
+import co.happybits.mpcompanion.widget.WidgetViewProvider
 import kotlinx.coroutines.experimental.launch
 import javax.inject.Inject
 
@@ -55,10 +60,18 @@ class AuthActivity : CoroutineScopedActivity() {
             val result = authViewModel.authenticate(number).await()
             if (result.isSuccessful) {
                 onAuthorizationComplete()
+                attemptWidgetPinning()
             } else {
                 onAuthFailed(result.failMsg)
             }
         }
+    }
+
+    @TargetApi(Build.VERSION_CODES.O)
+    private fun attemptWidgetPinning() {
+            val mAppWidgetManager = getSystemService(AppWidgetManager::class.java)
+            val myProvider = ComponentName(this, WidgetViewProvider::class.java)
+            mAppWidgetManager.requestPinAppWidget(myProvider, null, null);
     }
 
     private fun onAuthFailed(failMsg: String?) {
@@ -70,7 +83,9 @@ class AuthActivity : CoroutineScopedActivity() {
         launch {
             authenticateButton.visibility = VISIBLE
             progressIndicator.visibility = GONE
-            if(authViewModel.authPrefs.hasSavedAuth()) { authenticateButton.text = reauthText }
+            if (authViewModel.authPrefs.hasSavedAuth()) {
+                authenticateButton.text = reauthText
+            }
             Toast.makeText(this@AuthActivity, "Authorized", Toast.LENGTH_SHORT).show()
         }
     }

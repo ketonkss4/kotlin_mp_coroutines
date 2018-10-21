@@ -6,4 +6,5 @@
     <string name="convo_item_label">Conversation</string>
     <string name="reauthenticate_btn_txt">Re-Authenticate</string>
     <string name="authenticate_btn_txt">Authenticate</string>
+    <string name="widget_add_txt">Click to Add Chat</string>
 </resources>
