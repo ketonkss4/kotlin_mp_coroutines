@@ -69,25 +69,27 @@ class AuthActivity : CoroutineScopedActivity() {
 
     @TargetApi(Build.VERSION_CODES.O)
     private fun attemptWidgetPinning() {
-            val mAppWidgetManager = getSystemService(AppWidgetManager::class.java)
-            val myProvider = ComponentName(this, WidgetViewProvider::class.java)
-            mAppWidgetManager.requestPinAppWidget(myProvider, null, null);
+        val mAppWidgetManager = getSystemService(AppWidgetManager::class.java)
+        val myProvider = ComponentName(this, WidgetViewProvider::class.java)
+        mAppWidgetManager.requestPinAppWidget(myProvider, null, null);
     }
 
     private fun onAuthFailed(failMsg: String?) {
-        onAuthorizationComplete()
+        showAuthBtn()
         failMsg?.let { Toast.makeText(this, it, Toast.LENGTH_SHORT).show() }
     }
 
     private fun onAuthorizationComplete() {
-        launch {
-            authenticateButton.visibility = VISIBLE
-            progressIndicator.visibility = GONE
-            if (authViewModel.authPrefs.hasSavedAuth()) {
-                authenticateButton.text = reauthText
-            }
+        showAuthBtn()
+        if (authViewModel.authPrefs.hasSavedAuth()) {
+            authenticateButton.text = reauthText
             Toast.makeText(this@AuthActivity, "Authorized", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun showAuthBtn() {
+        authenticateButton.visibility = VISIBLE
+        progressIndicator.visibility = GONE
     }
 
     override fun onResume() {

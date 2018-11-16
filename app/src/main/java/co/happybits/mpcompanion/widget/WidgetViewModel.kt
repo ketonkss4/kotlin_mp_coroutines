@@ -1,11 +1,13 @@
 package co.happybits.mpcompanion.widget
 
 import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.lifecycle.MutableLiveData
+import co.happybits.mpcompanion.BuildConfig
 import co.happybits.mpcompanion.MpCompanion
 import co.happybits.mpcompanion.R
 import co.happybits.mpcompanion.authentication.AuthViewModel
@@ -31,18 +33,20 @@ class WidgetViewModel(private val poloService: PoloService,
                       private val picasso: Picasso
 ) : CoroutineScopedViewModel() {
 
-    private suspend fun requestTargetConversationData(targetConversation: String): Conversation {
+    private suspend fun requestTargetConversationData(targetConversation: String): Conversation? {
         val response = poloService.syncConversationData()
-        return response.conversations.first { it.conversation_id == targetConversation }
+        return response.conversations.firstOrNull { it.conversation_id == targetConversation }
     }
 
-    private suspend fun syncWidgetData(targetConversation: String): PoloWidget {
+    private suspend fun syncWidgetData(targetConversation: String): PoloWidget? {
         val conversationData = requestTargetConversationData(targetConversation)
-        return PoloWidget(conversationId = conversationData.conversation_id,
-                title = conversationData.getConversationTitle(),
-                unwatchedCount = conversationData.getUnwatchedCount(),
-                imgUrl = conversationData.getImageUrl(authViewModelViewModel.getAuthentication())
-        )
+        conversationData?.let {
+            return PoloWidget(conversationId = conversationData.conversation_id,
+                    title = conversationData.getConversationTitle(),
+                    unwatchedCount = conversationData.getUnwatchedCount(),
+                    imgUrl = conversationData.getImageUrl(authViewModelViewModel.getAuthentication()))
+        }
+        return null
     }
 
     fun requestConversationsListData() {
@@ -57,14 +61,14 @@ class WidgetViewModel(private val poloService: PoloService,
         val intent = Intent(context, WidgetService::class.java)
         intent.action = SERVICE_ACTION
         intent.putExtra(CONVO_ID_KEY, convoId)
-        return PendingIntent.getService(context, 0, intent, 0)
+        return PendingIntent.getService(context, 0, intent, FLAG_UPDATE_CURRENT)
     }
 
     private fun createWidgetSetupPendingIntent(widgetId: Int): PendingIntent {
         val context = MpCompanion.instance.applicationContext
         val intent = Intent(context, WidgetConfigureActivity::class.java)
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
-        return PendingIntent.getActivity(context, 0, intent, 0)
+        return PendingIntent.getActivity(context, 0, intent, FLAG_UPDATE_CURRENT)
     }
 
     fun updateWidgetData(
@@ -77,9 +81,6 @@ class WidgetViewModel(private val poloService: PoloService,
             launch {
                 convoId?.let {
                     val poloWidget = syncWidgetData(it)
-                    Log.v("DEBUGGING MP", "Update WidgetViewModel From Saved Prefs ConvoID = $it " +
-                            "Response: Title = ${poloWidget.title}, Unwatch Count = ${poloWidget.unwatchedCount}")
-
                     updateWidgetView(
                             appWidgetManager,
                             appWidgetId,
@@ -87,7 +88,6 @@ class WidgetViewModel(private val poloService: PoloService,
                             poloWidget
                     )
                 }
-
             }
         }
     }
@@ -96,8 +96,13 @@ class WidgetViewModel(private val poloService: PoloService,
             appWidgetManager: AppWidgetManager,
             appWidgetId: Int,
             views: RemoteViews,
-            poloWidget: PoloWidget
+            poloWidget: PoloWidget?
     ) {
+
+        if(poloWidget ==  null) {
+            resetAppWidget(appWidgetId, appWidgetManager)
+            return
+        }
         Log.v("DEBUGGING MP", "Update WidgetViewModel View.  Title = ${poloWidget.title}," +
                 " Unwatch Count = ${poloWidget.unwatchedCount}" +
                 " ID = ${poloWidget.conversationId}")
@@ -116,6 +121,16 @@ class WidgetViewModel(private val poloService: PoloService,
                 createHeartReplyPendingIntent(poloWidget.conversationId)
         )
         appWidgetManager.updateAppWidget(appWidgetId, views)
+    }
+
+    private fun resetAppWidget(appWidgetId: Int, appWidgetManager: AppWidgetManager) {
+        widgetPreferencesManager.removeConvoIdPref(appWidgetId)
+        setDefaultWidgetView(
+                appWidgetManager,
+                appWidgetId,
+                RemoteViews(BuildConfig.APPLICATION_ID, R.layout.widget_setup_view)
+        )
+        return
     }
 
     fun startTrackingConversationId(appWidgetId: Int, convoId: String) {
